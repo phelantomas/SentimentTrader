@@ -75,7 +75,9 @@ def process_tweets_from_main(tweets):
             if (invalid_count % 100 == 0):
                 print('Invalid:' + str(created_at), j['created_at'])
             continue
-    print("Successfully processed", len(list_of_tweets), "tweets")
+    #print("Successfully processed", len(list_of_tweets), "tweets")
+    twitter_info = "Successfully processed " + str(len(list_of_tweets)) + " tweets"
+    twitter_logger.info(twitter_info)
     return list_of_tweets
 
 
