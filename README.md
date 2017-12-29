@@ -13,8 +13,8 @@ AATCUOP is an attempt to create an automated system for Bitcoin trading, impleme
 `>>> nltk.download`
 
 ### Instructions
-python collect_tweets.py -o raw_tweets.txt
-python process_tweets.py -i raw_tweets.txt -o processed_tweets.txt
+Make sure to download the features.csv file, and include its path in predictions.py
+Run main.py
 
 ### Downloading the data set
 You can download the data [here](https://drive.google.com/open?id=0BzqCBdvJ6j-nUzRZckRJUVJwY00).
