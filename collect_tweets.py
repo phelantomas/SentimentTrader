@@ -4,6 +4,9 @@ This is intended to be called every minute.
 '''
 
 import argparse, json, datetime, uuid, tweepy, tweetwise_config
+import logCreater as lc
+
+twitter_logger = lc.setup_logger('first_logger', 'twitter_logfile.log')
 
 
 class Tweet:
@@ -67,6 +70,21 @@ def write_tweets_to_file(fname, tweets):
         print("Error writing tweets to '" + fname + "'")
     
 
+def collect_tweets(type):
+    twitter_info = "Getting tweets... (" +  str(datetime.datetime.now()) + ")"
+    twitter_logger.info(twitter_info)
+    #print("Getting tweets... (", datetime.datetime.now(), ")")
+
+    query_string = type
+
+    # The Twitter API allows 180 calls every 15 mins.
+    # The number 11 gives us 165 calls per 15 mins,
+    # putting us right under the limit.
+
+    #All bullshit make 400 or 390
+    T = get_latest_tweets(query_string, 390)
+    return T
+
 if __name__ == '__main__':
     print("Getting tweets... (", datetime.datetime.now(), ")")
 
@@ -74,6 +92,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-o", "--output", help="Output file", required=True)
     args = parser.parse_args()
+
+    print(args.output)
 
     
     # The query string can be changed to whatever
