@@ -1,7 +1,8 @@
 '''
-Includes functions for retrieving and storing bitcoin prices
-This is intended to run every hour.
-
+Author: Tomas Phelan
+License Employed: GNU General Public License v3.0
+Brief: Includes functions for retrieving and storing bitcoin prices
+        This is intended to run every hour.
 '''
 
 import requests

@@ -1,3 +1,9 @@
+'''
+Author: Tomas Phelan
+License Employed: GNU General Public License v3.0
+Brief:
+'''
+
 import pandas as pd
 import numpy as np
 from sklearn import datasets, linear_model
@@ -10,11 +16,11 @@ import logCreater as lc
 # file logger
 sentiment_logger = lc.setup_logger('second_logger', 'sentiment_logfile.log')
 
-def generate_linear_prediction_model(feature):
+def generate_linear_prediction_model(feature, file):
       lm = LinearRegression()
-      df = pd.read_csv('/home/tomas/PycharmProjects/CollegeProject/features.csv')
-      X = df['sentiment']
-      Y = df['change']
+      df = pd.read_csv(file)
+      X = df['Sentiment']
+      Y = df['Change']
 
       X = X.values.reshape(len(X), 1)
       Y = Y.values.reshape(len(Y), 1)
@@ -23,12 +29,15 @@ def generate_linear_prediction_model(feature):
 
       sentiment = feature['Sentiment'][0]
 
-      regFeature = {'sentiment': [sentiment]}
+      regFeature = {'Sentiment': [sentiment]}
 
       dfFeature = pd.DataFrame(regFeature)
-      log_info = "The sentiment of the last 15 minutes is : " + str(sentiment) + " - The predicted change in price is :" + str(lm.predict(dfFeature))
-      print(log_info)
+
+      predicted_change = str(lm.predict(dfFeature))
+      log_info = "The sentiment of the last 15 minutes is : " + str(sentiment) + " - The predicted change in price is :" + predicted_change
+
       sentiment_logger.info(log_info)
+      return predicted_change
 
 def generate_prediction_model(feature):
       df = pd.read_csv('/home/tomas/PycharmProjects/CollegeProject/features.csv')

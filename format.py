@@ -1,6 +1,9 @@
 '''
-Includes methods for processing raw tweet data
+Author: Tomas Phelan
+License Employed: GNU General Public License v3.0
+Brief: Includes methods for processing raw tweet data
 '''
+
 from string import ascii_lowercase
 from nltk.corpus import words as english_words, stopwords
 

@@ -1,3 +1,9 @@
+'''
+Author: Tomas Phelan
+License Employed: GNU General Public License v3.0
+Brief:
+'''
+
 from apscheduler.schedulers.blocking import BlockingScheduler
 import collect_tweets, collect_prices, process_tweets, json
 import pandas as pd
@@ -96,9 +102,11 @@ def scheduled_job():
 
     btcFeature = {'TimeStamp' : [btc_timestamp], 'Sentiment': [btc_average_compound], 'Volume': [btc_volume], 'Change': [btc_change]}
 
-    #Make
-    predict.generate_linear_prediction_model(btcFeature)
 
+    #Make
+    btc_predict_change = predict.generate_linear_prediction_model(btcFeature, "/home/tomas/PycharmProjects/CollegeProject/btcFeature.csv")
+
+    print( "The sentiment of the last 15 minutes for btc is : " + str(btcFeature['Sentiment'][0]) + " - The predicted change in price is :" + btc_predict_change)
     pd.DataFrame.from_dict(data=btcFeature, orient='columns').to_csv('btcFeature.csv', mode='a', header=not btc_file_exists)
 
     formatted_btc_tweets = []
@@ -114,6 +122,10 @@ def scheduled_job():
 
     ltcFeature = {'TimeStamp': [ltc_timestamp], 'Sentiment': [ltc_average_compound], 'Volume': [ltc_volume],
                   'Change': [ltc_change]}
+
+    ltc_predict_change = predict.generate_linear_prediction_model(ltcFeature, "/home/tomas/PycharmProjects/CollegeProject/ltcFeature.csv")
+
+    print( "The sentiment of the last 15 minutes for ltc is : " + str(ltcFeature['Sentiment'][0]) + " - The predicted change in price is :" + ltc_predict_change)
 
     pd.DataFrame.from_dict(data=ltcFeature, orient='columns').to_csv('ltcFeature.csv', mode='a',
                                                                      header=not ltc_file_exists)
@@ -131,6 +143,10 @@ def scheduled_job():
 
     ethFeature = {'TimeStamp': [eth_timestamp], 'Sentiment': [eth_average_compound], 'Volume': [eth_volume],
                   'Change': [eth_change]}
+
+    eth_predict_change = predict.generate_linear_prediction_model(ethFeature, "/home/tomas/PycharmProjects/CollegeProject/ethFeature.csv")
+
+    print( "The sentiment of the last 15 minutes for eth is : " + str(ethFeature['Sentiment'][0]) + " - The predicted change in price is :" + eth_predict_change)
 
     pd.DataFrame.from_dict(data=ethFeature, orient='columns').to_csv('ethFeature.csv', mode='a',
                                                                      header=not eth_file_exists)

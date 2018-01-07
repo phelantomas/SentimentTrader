@@ -1,9 +1,11 @@
 '''
-Includes functions for retrieving and storing tweets.
+Author: Tomas Phelan
+License Employed: GNU General Public License v3.0
+Brief: Includes functions for retrieving and storing tweets.
 This is intended to be called every minute.
 '''
 
-import argparse, json, datetime, uuid, tweepy, tweetwise_config
+import argparse, json, datetime, uuid, tweepy, tweepy_config
 import logCreater as lc
 
 twitter_logger = lc.setup_logger('first_logger', 'twitter_logfile.log')
@@ -23,10 +25,10 @@ def authenticate():
     try:
         # Get api credentials from config file.
         # (config file is added to .gitignore for security)
-        consumer_key = tweetwise_config.CONSUMER_KEY
-        consumer_secret = tweetwise_config.CONSUMER_SECRET
-        access_token = tweetwise_config.ACCESS_TOKEN
-        access_token_secret = tweetwise_config.ACCESS_TOKEN_SECRET
+        consumer_key = tweepy_config.CONSUMER_KEY
+        consumer_secret = tweepy_config.CONSUMER_SECRET
+        access_token = tweepy_config.ACCESS_TOKEN
+        access_token_secret = tweepy_config.ACCESS_TOKEN_SECRET
     
         # Connect to api
         auth = tweepy.OAuthHandler(consumer_key, consumer_secret)

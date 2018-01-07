@@ -1,3 +1,9 @@
+'''
+Author: Tomas Phelan
+License Employed: GNU General Public License v3.0
+Brief:
+'''
+
 import argparse, json, format
 from nltk.sentiment.vader import SentimentIntensityAnalyzer as SIA
 from datetime import datetime
