@@ -9,7 +9,7 @@ import collect_tweets, collect_prices, process_tweets, json
 import pandas as pd
 import os.path
 import predict
-import logCreater as lc
+import log_creater as lc
 
 twitter_logger = lc.setup_logger('first_logger', 'twitter_logfile.log')
 

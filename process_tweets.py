@@ -7,7 +7,7 @@ Brief:
 import argparse, json, format
 from nltk.sentiment.vader import SentimentIntensityAnalyzer as SIA
 from datetime import datetime
-import logCreater as lc
+import log_creater as lc
 
 twitter_logger = lc.setup_logger('first_logger', 'twitter_logfile.log')
 

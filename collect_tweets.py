@@ -6,7 +6,7 @@ This is intended to be called every minute.
 '''
 
 import argparse, json, datetime, uuid, tweepy, tweepy_config
-import logCreater as lc
+import log_creater as lc
 
 twitter_logger = lc.setup_logger('first_logger', 'twitter_logfile.log')
 
