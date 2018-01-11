@@ -9,7 +9,7 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer as SIA
 from datetime import datetime
 import log_creater as lc
 
-twitter_logger = lc.setup_logger('first_logger', 'twitter_logfile.log')
+twitter_logger = lc.setup_logger('first_logger', 'twitter_sentiment_test_logfile.log')
 
 def process_tweets_from_file(fin, fout):
     valid_count = 0
@@ -84,6 +84,9 @@ def process_tweets_from_main(tweets):
     #print("Successfully processed", len(list_of_tweets), "tweets")
     twitter_info = "Successfully processed " + str(len(list_of_tweets)) + " tweets"
     twitter_logger.info(twitter_info)
+    for tweet in list_of_tweets:
+        info = "OG Text : " + tweet['text'] + " Formatted : " + tweet['formatted_text'] + " " + str(tweet['sentiment'])
+        twitter_logger.info(info)
     return list_of_tweets
 
 

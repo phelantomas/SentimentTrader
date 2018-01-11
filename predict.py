@@ -11,14 +11,14 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.linear_model import LinearRegression
 #import matplotlib.pyplot as plt
-import logCreater as lc
+import log_creater as lc
 
 # file logger
 sentiment_logger = lc.setup_logger('second_logger', 'sentiment_logfile.log')
 
 def generate_linear_prediction_model(feature, file):
       lm = LinearRegression()
-      df = pd.read_csv(file)
+      df = pd.read_csv(file, error_bad_lines=False)
       X = df['Sentiment']
       Y = df['Change']
 

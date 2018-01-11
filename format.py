@@ -6,6 +6,9 @@ Brief: Includes methods for processing raw tweet data
 
 from string import ascii_lowercase
 from nltk.corpus import words as english_words, stopwords
+import Porter
+
+porter_stemming = Porter.PorterStemmer()
 
 english = set(w.lower() for w in english_words.words())
 stop = set(w.lower() for w in stopwords.words())
@@ -61,13 +64,18 @@ def format_syntax(text):
 
 def format_semantic(text):
     a = remove_non_english_words(text, english)
-    b = remove_stopwords(a, stop)
+    #Checkcking to see what difference is made
+    #b = remove_stopwords(a, stop)
     return b
+
+def format_porter(text):
+    return porter_stemming.stem(text, 0,len(text)-1)
     
 
 def format_full(text):
     return (format_semantic(format_syntax(text)))
-    
+    #return #format_porter(formatted_text)
+
 
 def format_test():
     print(format_full("# ILoveNY bcuz    $ $  money"))
