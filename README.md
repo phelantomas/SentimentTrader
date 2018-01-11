@@ -10,7 +10,7 @@ AATCUOP is a 4th year college project that is an attempt to create an automated 
 `>>> import nltk` 
 `>>> nltk.download`
 3. Setup up tweepy:
-How to setup [here](https://dev.twitter.com/twitterkit/android/advanced-setup).
+How to setup [here](https://dev.twitter.com/twitterkit/android/advanced-setup). Once keys are got, update the keys in the tweepy_config.py file.
 4. Run:
 `$ python main.py`
 
