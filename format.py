@@ -66,7 +66,7 @@ def format_semantic(text):
     a = remove_non_english_words(text, english)
     #Checkcking to see what difference is made
     #b = remove_stopwords(a, stop)
-    return b
+    return a
 
 def format_porter(text):
     return porter_stemming.stem(text, 0,len(text)-1)
