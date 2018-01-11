@@ -17,27 +17,30 @@ import log_creater as lc
 sentiment_logger = lc.setup_logger('second_logger', 'sentiment_logfile.log')
 
 def generate_linear_prediction_model(feature, file):
-      lm = LinearRegression()
-      df = pd.read_csv(file, error_bad_lines=False)
-      X = df['Sentiment']
-      Y = df['Change']
+      try:
+            lm = LinearRegression()
+            df = pd.read_csv(file, error_bad_lines=False)
+            X = df['Sentiment']
+            Y = df['Change']
 
-      X = X.values.reshape(len(X), 1)
-      Y = Y.values.reshape(len(Y), 1)
+            X = X.values.reshape(len(X), 1)
+            Y = Y.values.reshape(len(Y), 1)
 
-      lm.fit(X, Y)
+            lm.fit(X, Y)
 
-      sentiment = feature['Sentiment'][0]
+            sentiment = feature['Sentiment'][0]
 
-      regFeature = {'Sentiment': [sentiment]}
+            regFeature = {'Sentiment': [sentiment]}
 
-      dfFeature = pd.DataFrame(regFeature)
+            dfFeature = pd.DataFrame(regFeature)
 
-      predicted_change = str(lm.predict(dfFeature))
-      log_info = "The sentiment of the last 15 minutes is : " + str(sentiment) + " - The predicted change in price is :" + predicted_change
+            predicted_change = str(lm.predict(dfFeature))
+            log_info = "The sentiment of the last 60 minutes is : " + str(sentiment) + " - The predicted change in price is :" + predicted_change
 
-      sentiment_logger.info(log_info)
-      return predicted_change
+            sentiment_logger.info(log_info)
+            return predicted_change
+      except:
+            print("Not enough values yet.")
 
 def generate_prediction_model(feature):
       df = pd.read_csv('/home/tomas/PycharmProjects/CollegeProject/features.csv')
