@@ -47,7 +47,8 @@ def analyse_data(formatted_tweets, filename, exchange, coin):
     # Make
     predict_change = predict.generate_linear_prediction_model(cryptoFeature, filename)
 
-    print("The sentiment of the last 15 minutes for " + coin + " is : " + str(
+    if(predict_change):
+        print("The sentiment of the last 60 minutes for " + coin + " is : " + str(
         cryptoFeature['Sentiment'][0]) + " - The predicted change in price is : " + predict_change)
 
 
