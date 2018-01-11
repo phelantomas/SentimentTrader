@@ -6,12 +6,14 @@ Brief: Includes functions for retrieving and storing bitcoin prices
 '''
 
 import requests
-import sentiment
+import json
 
 def get_price_info(type):
     try:
         url = 'https://api.cryptonator.com/api/ticker/{}'.format(type)
         response = requests.get(url)
+        filename = type + "_prices.txt"
+        write_price_to_file(response, filename)
         return response.text
     except:
         return None
@@ -21,17 +23,17 @@ def write_price_to_file(price, fname):
     if price:
         try:
             with open(fname, 'a') as f:
-                f.write(price+"\n")
-            print("Successfully wrote btc price")
+                f.write(str(price.text)+"\n")
+            print("Successfully wrote price")
         except:
             print("Error writing price to '" + fname + "'")
     else:
         print("No tweet to write")
   
 def collect_price():
-    p = get_btc_info()
+    p = get_price_info()
     write_price_to_file(p, 'prices.txt')
 
 if __name__ == "__main__":
-    p = get_btc_info()
+    p = get_price_info()
     write_price_to_file(p, 'prices.txt')
