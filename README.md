@@ -1,6 +1,6 @@
 # Automated Algorithmnic Trading Of Cryptocurrencies Utilising Opinion Mining
 
-AATCUOP is an attempt to create an automated system for Bitcoin trading, implementing the techniques described in Colianni et al. to build a predictive model based on Twitter sentiment analysis [1].
+AATCUOP is a 4th year college project that is an attempt to create an automated system for Bitcoin trading, utilizing sentiment analysis of Twitter to build a predictive model.
 
 ### Setup
 1. Install requirements:
