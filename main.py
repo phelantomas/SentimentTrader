@@ -9,6 +9,7 @@ import pandas as pd
 import os.path
 import predict
 import log_creater as lc
+import datetime
 
 formatted_btc_tweets = []
 formatted_ltc_tweets = []
@@ -20,10 +21,24 @@ sched = BlockingScheduler()
 num_of_passes = 0
 
 def analyse_data(formatted_tweets, filename, exchange, coin):
+    btcTweetsInHour = []
     #remove duplicated tweets
     formatted_tweets = [i for n, i in enumerate(formatted_tweets) if i not in formatted_tweets[n + 1:]]
 
     print("Number of unique tweets in an hour for " + coin + " is " + str(len(formatted_tweets)))
+    #tweet_filename = coin + "_tweets.txt"
+    #collect_tweets.write_tweets_to_file_json(tweet_filename, formatted_tweets)
+
+    tweets_from_one_hour = datetime.datetime.now() - datetime.timedelta(hours=1)
+
+    for tweet in formatted_tweets:
+        created_at = datetime.datetime.strptime(tweet['created_at'], '%Y-%m-%dT%H:%M:%S')
+        if created_at > tweets_from_one_hour:
+            btcTweetsInHour.append(tweet)
+
+    print("Number of unique tweets in an hour for " + coin + " is " + str(len(btcTweetsInHour)))
+
+
 
     file_exists = os.path.isfile(filename)
 
@@ -35,8 +50,8 @@ def analyse_data(formatted_tweets, filename, exchange, coin):
     timestamp = j_info['timestamp']
 
     # average compound
-    average_compound = float(sum(d['sentiment']['compound'] for d in formatted_tweets)) / len(
-        formatted_tweets)
+    average_compound = float(sum(d['sentiment']['compound'] for d in btcTweetsInHour)) / len(
+        btcTweetsInHour)
 
 
     cryptoFeature = {'TimeStamp': [timestamp], 'Sentiment': [average_compound], 'Volume': [volume],
@@ -66,38 +81,38 @@ def timed_job():
     #bitcoin
     btcTweets = collect_tweets.collect_tweets('bitcoin')
     btcTweets = process_tweets.process_tweets_from_main(btcTweets)
-    log_info = "Number of btc tweets just recieved : " + str(len(btcTweets))
-    twitter_logger.info(log_info)
+    #log_info = "Number of btc tweets just recieved : " + str(len(btcTweets))
+    #twitter_logger.info(log_info)
     #print("Number of btcTweets just retrieved", len(btcTweets))
 
     formatted_btc_tweets.extend(btcTweets)
     #print(len(formatted_btc_tweets))
-    log_info = "Current number of btc tweets : " + str(len(btcTweets))
-    twitter_logger.info(log_info)
+    #log_info = "Current number of btc tweets : " + str(len(btcTweets))
+    #twitter_logger.info(log_info)
 
     #litecoin
     ltcTweets = collect_tweets.collect_tweets('litecoin')
     ltcTweets = process_tweets.process_tweets_from_main(ltcTweets)
     #print("Number of ltcTweets", len(ltcTweets))
-    log_info = "Number of ltc tweets just recieved : " + str(len(ltcTweets))
-    twitter_logger.info(log_info)
+    #log_info = "Number of ltc tweets just recieved : " + str(len(ltcTweets))
+    #twitter_logger.info(log_info)
 
     formatted_ltc_tweets.extend(ltcTweets)
     #print(len(formatted_ltc_tweets))
-    log_info = "Current number of ltc tweets : " + str(len(ltcTweets))
-    twitter_logger.info(log_info)
+    #log_info = "Current number of ltc tweets : " + str(len(ltcTweets))
+    #twitter_logger.info(log_info)
 
     #etherium
     ethTweets = collect_tweets.collect_tweets('etherium')
     ethTweets = process_tweets.process_tweets_from_main(ethTweets)
     #print("Number of ethTweets", len(ethTweets))
-    log_info = "Number of eth tweets just recieved : " + str(len(ethTweets))
-    twitter_logger.info(log_info)
+    #log_info = "Number of eth tweets just recieved : " + str(len(ethTweets))
+    #twitter_logger.info(log_info)
 
     formatted_eth_tweets.extend(ethTweets)
     #print(len(formatted_eth_tweets))
-    log_info = "Current number of eth tweets : " + str(len(ethTweets))
-    twitter_logger.info(log_info)
+    #log_info = "Current number of eth tweets : " + str(len(ethTweets))
+    #twitter_logger.info(log_info)
 
     if(num_of_passes is 60):
         num_of_passes = 0
