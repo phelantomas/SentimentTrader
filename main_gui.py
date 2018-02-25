@@ -16,7 +16,7 @@ import datetime
 import matplotlib
 import notify_config
 import notify
-
+import numpy as np
 import random
 
 formatted_btc_tweets = []
@@ -33,6 +33,7 @@ num_of_passes = 0
 class SentimentTrader(QTabWidget):
     def __init__(self, parent=None):
         super(SentimentTrader, self).__init__(parent)
+        self.loop = 0
         self.home = QWidget()
         self.bitcoin_home = QScrollArea()
         self.bitcoin_home.setWidgetResizable(True)
@@ -52,6 +53,16 @@ class SentimentTrader(QTabWidget):
         self.btc_price_label = QLabel()
 
         self.btc_table = QTableWidget()
+        #
+        self.list_actual_change = []
+        self.list_predicted_change = []
+
+        #plotting
+        self.btc_xlist = []
+        self.btc_y_actual_list = []
+        self.btc_y_predict_list = []
+        self.btc_current_price = []
+        self.plot_time = []
 
         header = ['TimeStamp', 'Tweet', 'Sentiment']
 
@@ -68,7 +79,7 @@ class SentimentTrader(QTabWidget):
         # it takes the `figure` instance as a parameter to __init__
         self.btcCanvas = FigureCanvas(self.btcFigure)
 
-        self.plot(1)
+        #self.plot(1,1,1)
 
         self.collect_data()
 
@@ -121,40 +132,66 @@ class SentimentTrader(QTabWidget):
         self.setTabText(3, "Etherium")
         self.etherium_home.setLayout(layout)
 
-    def plot(self, predicted_change):
-        ''' plot some random stuff '''
-        # random data
-        data = [random.random() for i in range(10)]
-        pullData = pd.read_csv("btcFeature.csv", error_bad_lines=False)
-        pullData = pullData.tail(n=7)
+    def plot(self, predicted_change, actual_change, current_price):#str, u, u
+        ''' plot change'''
+        #last_hour = actual_change
+        self.list_actual_change.append(actual_change)
+        self.btc_current_price.append(current_price)
+        self.btc_y_actual_list.append(actual_change)
+        #self.plot_time.append(str(datetime.datetime.now().minute))
 
+        self.plot_time.append(datetime.datetime.now().strftime("%H:%M:%S"))
+
+        if len(self.btc_y_predict_list) is 0:
+            self.btc_y_predict_list.append(current_price)
+            self.loop = 1
+        self.btc_y_predict_list.append(float(current_price) + float(predicted_change))
+
+
+        i = 0
         xList = []
-        yList = []
-        for index, row in pullData.iterrows():
-            hour = datetime.datetime.fromtimestamp(int(row['TimeStamp'])).hour
-            print(hour)
-            print(row['Price'])
-            xList.append("Hour : " + str(hour))#
-            yList.append(int(row['Price']))
+        yList = self.btc_current_price
+        for x in yList:
+            xList.append(i)
+            i = i + 1
+            # create an axis
+            ax = self.btcFigure.add_subplot(111)  # 111
+            ax.clear()
+            ax.cla()
+            ax.remove()
+            ax = self.btcFigure.add_subplot(111)
+            ax.set_title('Bitcoin Price Previous Hours')
+            ax.set_ylabel('Price ($)')
+            ax.set_xlabel('Time (h)')
 
-        xList.append("Predicted Change")
-        yList.append(float(row['Price']) + float(predicted_change))
+        if len(self.btc_current_price) > 8:
+            x = np.array([0, 1, 2, 3,4,5,6,7,8])
+            btc_current_price_graph = self.btc_current_price[-8:]
+            btc_y_predict_list_graph = self.btc_y_predict_list[-9:]
+            xList = xList[-8:]
+            xList[:] = [x - self.loop for x in xList]
+            self.loop = self.loop + 1
+            predict_xList = self.plot_time[-8:]#xList[:]
+            predict_xList.append("Predicted Change")
 
-        # create an axis
-        ax = self.btcFigure.add_subplot(111) #111
+        else:
+            btc_current_price_graph = self.btc_current_price
+            btc_y_predict_list_graph = self.btc_y_predict_list
+            predict_xList = self.plot_time[:]#xList[:]
+            predict_xList.append("Predicted Change")
 
-        # discards the old graph
-        ax.clear()
+        btc_y_predict_list_graph = [float(i) for i in btc_y_predict_list_graph]
+        btc_current_price_graph = [float(i) for i in btc_current_price_graph]
 
-        ax.set_title('Bitcoin Price Previous Hours')
-        ax.set_ylabel('Price ($)')
-        ax.set_xlabel('Time (h)')
-        # plot data
-        x = [0, 1, 2, 3, 4, 5, 6, 7]
-        ax.set_xticks(x)
-        ax.set_xticklabels(xList)
-        ax.plot(x, yList)
+        print(xList)
+        print(btc_current_price_graph)
+        print(predict_xList)
+        print(btc_y_predict_list_graph)
 
+
+
+        ax.plot(predict_xList[:-1], btc_current_price_graph)
+        ax.plot(predict_xList, btc_y_predict_list_graph)
         self.btcCanvas.draw_idle()
 
     def analyse_data(self, formatted_tweets, filename, exchange, coin):
@@ -201,7 +238,7 @@ class SentimentTrader(QTabWidget):
         # Make
         predict_change = predict.generate_linear_prediction_model(cryptoFeature, filename)
 
-        self.plot(btc_predict_change)
+        self.plot(btc_predict_change, change, price)
 
         self.btc_sentiment_label.setText("The current sentiment is " + str(average_compound))
         self.btc_predict_label.setText("Predicted change in price is " + str(btc_predict_change))
@@ -258,10 +295,13 @@ class SentimentTrader(QTabWidget):
         #self.btc_predict_label.setText("Predicted change in price is " + str(btc_predict_change))
 
         #self.plot(btc_predict_change)
-        #price_info = collect_prices.get_price_info('btc-usd')
+        price_info = collect_prices.get_price_info('btc-usd')
 
-        #j_info = json.loads(price_info)
-        #change = j_info['ticker']['change']
+        j_info = json.loads(price_info)
+        change = j_info['ticker']['change']
+        price = j_info['ticker']['price']
+
+        self.plot(btc_predict_change, change, price)
 
         #self.btc_price_label.setText("Actual change in price is " + str(change))
         #if btc_var_pred_text:
