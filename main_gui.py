@@ -2,7 +2,11 @@ import datetime
 import os.path
 import sys
 import threading
-from multiprocessing import Process
+import multiprocessing
+#from twisted.internet import task
+#from twisted.internet import reactor
+import time
+from PyQt4 import QtCore
 
 import pandas as pd
 from PyQt4.QtCore import *
@@ -16,6 +20,8 @@ import collect_tweets
 import json
 import predict
 import process_tweets
+import notify
+import notify_config
 
 formatted_btc_tweets = []
 formatted_ltc_tweets = []
@@ -28,9 +34,13 @@ ltc_predict_change_model = None
 eth_predict_change_model = None
 num_of_passes = 0
 
-class SentimentTrader(QTabWidget):
+class SentimentTraderWindow(QTabWidget):
     def __init__(self, parent=None):
-        super(SentimentTrader, self).__init__(parent)
+        super(SentimentTraderWindow, self).__init__(parent)
+        self.workerThread = WorkerThread()
+
+        self.connect(self.workerThread, QtCore.SIGNAL("update_tweets_table"), self.update_tweets_table)
+
         self.loop = 0
         self.home = QWidget()
         self.bitcoin_home = QScrollArea()
@@ -95,8 +105,7 @@ class SentimentTrader(QTabWidget):
         self.eth_ax = self.btcFigure.add_subplot(111)
 
         #self.plot(1,1,1)
-
-        self.collect_data()
+####rememember!!!self.collect_data()
 
         self.home_UI()
         self.bitcoin_home_UI()
@@ -104,6 +113,8 @@ class SentimentTrader(QTabWidget):
         self.etherium_home_UI()
         self.setWindowTitle("Sentment Trader")
         self.resize(1450, 720)
+
+        self.process_data()
 
     def home_UI(self):
         layout = QFormLayout()
@@ -193,7 +204,7 @@ class SentimentTrader(QTabWidget):
             ax.set_ylabel('Price ($)')
             ax.set_xlabel('Time (h)')
             ax.grid()
-            ax.set_ylim((min(y_predict_list_graph) - 5), (max(y_predict_list_graph) + 5))
+            ax.set_ylim((min(y_predict_list_graph) - 1), (max(y_predict_list_graph) + 1))
 
         print(current_price_graph)
         print(predict_xList)
@@ -206,6 +217,26 @@ class SentimentTrader(QTabWidget):
             self.btcCanvas.draw_idle()
         elif currency == "Litecoin":
             self.ltcCanvas.draw_idle()
+
+    def process_data(self):
+        self.workerThread.start()
+
+    def update_tweets_table(self, tweets):
+        row = 0
+        # do at end
+        for tweet in tweets:
+            rowPosition = self.btc_table.rowCount()
+            self.btc_table.insertRow(rowPosition)
+            self.btc_table.setItem(rowPosition, 0, QTableWidgetItem(str(tweet['created_at'])))
+            self.btc_table.setItem(rowPosition, 1, QTableWidgetItem(
+                str(tweet['formatted_text'].encode('utf8'))))  # tweet['formatted_text']
+            self.btc_table.setItem(rowPosition, 2, QTableWidgetItem(str(tweet['sentiment']['compound'])))
+            row = row + 1
+
+class WorkerThread(QThread):
+    def __init__(self, parent=None):
+        super(WorkerThread, self).__init__(parent)
+        #window = SentimentTraderWindow()
 
     def analyse_data(self, formatted_tweets, filename, exchange, coin, current_price, plot_time, y_predict_list):
         global predict_change
@@ -220,7 +251,7 @@ class SentimentTrader(QTabWidget):
 
         print("Number of unique tweets in an hour for " + coin + " is " + str(len(formatted_tweets)))
 
-        tweets_from_one_hour = datetime.datetime.now() - datetime.timedelta(hours=1)
+        tweets_from_one_hour = datetime.datetime.now() - datetime.timedelta(hours=2)#2 hours now due to time saving
 
         for tweet in formatted_tweets:
             created_at = datetime.datetime.strptime(tweet['created_at'], '%Y-%m-%dT%H:%M:%S')
@@ -232,9 +263,18 @@ class SentimentTrader(QTabWidget):
 
         file_exists = os.path.isfile(filename)
 
-        price_info = collect_prices.get_price_info(exchange)
+        timeout = 1
+        str_error = "No price yet"
+        while str_error:
+            try:
+                price_info = collect_prices.get_price_info(exchange)
+                j_info = json.loads(price_info)
+                str_error = None
+            except Exception as str_error:
+                print(str_error)
+                time.sleep(timeout)
+                #timeout *= 1
 
-        j_info = json.loads(price_info)
         change = j_info['ticker']['change']
         volume = j_info['ticker']['volume']
         price = j_info['ticker']['price']
@@ -249,25 +289,19 @@ class SentimentTrader(QTabWidget):
 
         pd.DataFrame.from_dict(data=cryptoFeature, orient='columns').to_csv(filename, mode='a',
                                                                             header=not file_exists)
-
-        #self.plot()
-
         # Make
         predict_change = predict.generate_linear_prediction_model(cryptoFeature, filename)
 
+        if (float(predict_change) >= notify_config.BITCOIN_PRICE_ABOVE or float(predict_change)
+                <= notify_config.BITCOIN_PRICE_BELOW):
+            notify.push_notification(predict_change, "Bitcoin")
+
+        #Plotting
         current_price.append(price)
-        #y_actual_list.append(change)
         plot_time.append(datetime.datetime.now().strftime("%H:%M:%S"))
         print(predict_change)
 
         self.plot(predict_change, current_price, plot_time, y_predict_list, coin)
-
-        #self.btc_current_price.append(price)
-        #self.btc_y_actual_list.append(change)
-       # self.plot_time.append(datetime.datetime.now().strftime("%H:%M:%S"))
-
-        #self.plot(self.btc_ax, btc_predict_change, change, price)
-        #self.plot(self.btc_ax, predict_change, self.btc_y_actual_list, self.btc_current_price)
 
         self.btc_sentiment_label.setText("The current sentiment is " + str(average_compound))
         self.btc_predict_label.setText("Predicted change in price is " + str(btc_predict_change))
@@ -277,8 +311,7 @@ class SentimentTrader(QTabWidget):
             print("The sentiment of the last 60 minutes for " + coin + " is : " + str(
                 cryptoFeature['Sentiment'][0]) + " - The predicted change in price is : " + predict_change)
 
-
-    def collect_data(self):
+    def run(self):
         global formatted_btc_tweets
         global formatted_ltc_tweets
         global formatted_eth_tweets
@@ -301,45 +334,9 @@ class SentimentTrader(QTabWidget):
 
         formatted_btc_tweets = [i for n, i in enumerate(formatted_btc_tweets) if i not in formatted_btc_tweets[n + 1:]]
 
-        row = 0
 
-        if btc_predict_change_model is None:
-            btc_predict_change_model = predict.generate_linear_prediction_model_init("btcFeature.csv")
-
-        # Generate new prediction every minute
-
-        # average compound
-        average_compound = float(sum(d['sentiment']['compound'] for d in formatted_btc_tweets)) / len(
-            formatted_btc_tweets)
-
-        regFeature = {'Sentiment': [average_compound]}
-
-        dfFeature = pd.DataFrame(regFeature)
-
-        #btc_predict_change = str(btc_predict_change_model.predict(dfFeature)[0][0])
-
-        #if( float(btc_predict_change) >= notify_config.BITCOIN_PRICE_ABOVE or float(btc_predict_change) <= notify_config.BITCOIN_PRICE_BELOW):
-         #   notify.push_notification(btc_predict_change, "Bitcoin")
-
-
-        #self.btc_sentiment_label.setText("The current sentiment is " + str(average_compound))
-        #self.btc_predict_label.setText("Predicted change in price is " + str(btc_predict_change))
-
-        #self.plot(btc_predict_change)
-        #price_info = collect_prices.get_price_info('btc-usd')
-
-        #j_info = json.loads(price_info)
-        #change = j_info['ticker']['change']
-        #price = j_info['ticker']['price']
-
-        #self.btc_current_price.append(price)
-        #self.btc_y_actual_list.append(change)
-        #self.btc_plot_time.append(datetime.datetime.now().strftime("%H:%M:%S"))
-        #self.plot(btc_predict_change, self.btc_current_price, self.btc_plot_time, self.btc_y_predict_list, "Bitcoin")
-
-        #self.btc_price_label.setText("Actual change in price is " + str(change))
-        #if btc_var_pred_text:
-        #    btc_var_pred_text.set("Predicted change in price is " + str(btc_predict_change))
+        if(float(btc_predict_change) >= notify_config.BITCOIN_PRICE_ABOVE or float(btc_predict_change) <= notify_config.BITCOIN_PRICE_BELOW):
+            notify.push_notification(btc_predict_change, "Bitcoin")
 
         # litecoin
         ltcTweets = collect_tweets.collect_tweets('litecoin')
@@ -347,45 +344,17 @@ class SentimentTrader(QTabWidget):
 
         formatted_ltc_tweets.extend(ltcTweets)
 
-        ######
-        #formatted_ltc_tweets = [i for n, i in enumerate(formatted_ltc_tweets) if i not in formatted_ltc_tweets[n + 1:]]
-
-        #row = 0
-
-
-        #self.plot(ltc_predict_change, self.ltc_current_price, self.ltc_plot_time, self.ltc_y_predict_list, "Litecoin")
-        #######
-
         # etherium
         ethTweets = collect_tweets.collect_tweets('etherium')
         ethTweets = process_tweets.process_tweets_from_main(ethTweets)
 
         formatted_eth_tweets.extend(ethTweets)
 
-        #do at end
-        for tweet in btcTweets:
-            rowPosition = self.btc_table.rowCount()
-            self.btc_table.insertRow(rowPosition)
-            self.btc_table.setItem(rowPosition, 0, QTableWidgetItem(str(tweet['created_at'])))
-            self.btc_table.setItem(rowPosition, 1, QTableWidgetItem(
-                str(tweet['formatted_text'].encode('utf8'))))  # tweet['formatted_text']
-            self.btc_table.setItem(rowPosition, 2, QTableWidgetItem(str(tweet['sentiment']['compound'])))
-            row = row + 1
+        self.emit(SIGNAL("update_tweets_table"), formatted_btc_tweets)
 
-        if (num_of_passes is 5):
+        if (num_of_passes is 3):
             num_of_passes = 0
-            #t1 = Process(target=self.analyse_data, args=(
-             #   formatted_btc_tweets, "btcFeature.csv", "btc-usd", "Bitcoin", self.btc_current_price,
-              #  self.btc_plot_time, self.btc_y_predict_list,))
-            #t1.start()
-            #t2 = Process(target=self.analyse_data, args=(
-            #formatted_ltc_tweets, "ltcFeature.csv", "ltc-usd", "Litecoin", self.ltc_current_price, self.ltc_plot_time,
-            #self.ltc_y_predict_list,))
-            #t2.start()
-            #t1.join()
-            #t2.join()
             self.analyse_data(formatted_btc_tweets, "btcFeature.csv", "btc-usd", "Bitcoin", self.btc_current_price, self.btc_plot_time, self.btc_y_predict_list,)
-            #formatted_btc_tweets = []
             self.analyse_data(formatted_ltc_tweets, "ltcFeature.csv", "ltc-usd", "Litecoin", self.ltc_current_price, self.ltc_plot_time, self.ltc_y_predict_list)
 
            # self.analyse_data(formatted_eth_tweets, "ethFeature.csv", "eth-usd", "Etherium")
@@ -394,9 +363,9 @@ class SentimentTrader(QTabWidget):
 
 def main():
     app = QApplication(sys.argv)
-    window = SentimentTrader()
+    window = SentimentTraderWindow()
     timer = QTimer()
-    timer.timeout.connect(window.collect_data)
+    timer.timeout.connect(window.process_data)
     timer.start(60000)
     window.show()
     sys.exit(app.exec_())
