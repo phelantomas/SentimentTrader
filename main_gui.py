@@ -1,10 +1,6 @@
 import datetime
 import os.path
 import sys
-import threading
-import multiprocessing
-#from twisted.internet import task
-#from twisted.internet import reactor
 import time
 from PyQt4 import QtCore
 
@@ -22,147 +18,170 @@ import predict
 import process_tweets
 import notify
 import notify_config
+import crypto_config
 
-formatted_btc_tweets = []
-formatted_ltc_tweets = []
-formatted_eth_tweets = []
-btc_predict_change = 0
-ltc_predict_change = 0
-eth_predict_change = 0
-btc_predict_change_model = None
-ltc_predict_change_model = None
-eth_predict_change_model = None
+NOTIFY_CONFIG = json.load(open("notify_config.json"))
+formatted_cryptocurrency_tweets = []
 num_of_passes = 0
+logo_path = "/home/phelan/Project/CollegeProject/crypto_logo.png"
+NUMBER_OF_MINUTES = 60
 
 class SentimentTraderWindow(QTabWidget):
     def __init__(self, parent=None):
         super(SentimentTraderWindow, self).__init__(parent)
+
+        #Create threads and connections
         self.workerThread = WorkerThread()
-
         self.connect(self.workerThread, QtCore.SIGNAL("update_tweets_table"), self.update_tweets_table)
+        self.connect(self.workerThread, QtCore.SIGNAL("analyse_data"), self.analyse_data)
+        self.connect(self.workerThread, QtCore.SIGNAL("update_current_sentiment"), self.update_current_sentiment)
 
-        self.loop = 0
         self.home = QWidget()
-        self.bitcoin_home = QScrollArea()
-        self.bitcoin_home.setWidgetResizable(True)
-        self.litecoin_home = QWidget()
-        self.etherium_home = QWidget()
+        self.cryptocurrency_home = QScrollArea()
+        self.cryptocurrency_home.setWidgetResizable(True)
+        self.notification_home = QWidget()
 
         self.addTab(self.home, "Home")
-        self.addTab(self.bitcoin_home, "Bitcoin")
-        self.addTab(self.litecoin_home, "Litecoin")
-        self.addTab(self.etherium_home, "Etherium")
+        self.addTab(self.cryptocurrency_home, crypto_config.CRYPTOCURRENCY)
+        self.addTab(self.notification_home, "Notification")
 
-        self.btc_predict_label = QLabel()
-        self.ltc_predict_label = QLabel()
-        self.eth_predict_label = QLabel()
+        self.cryptocurrency_sentiment_label = QLabel()
 
-        self.btc_sentiment_label = QLabel()
-        self.btc_price_label = QLabel()
-
-        self.btc_table = QTableWidget()
+        self.cryptocurrency_table = QTableWidget()
 
         #####
         self.list_actual_change = []
         self.list_predicted_change = []
         ####
 
-        #plotting bitcoin
-        self.btc_xlist = []
-        self.btc_y_actual_list = []
-        self.btc_y_predict_list = []
-        self.btc_current_price = []
-        self.btc_plot_time = []
+        #plotting cryptocurrency
+        self.cryptocurrency_xlist = []
+        self.cryptocurrency_y_actual_list = []
+        self.cryptocurrency_y_predict_list = []
+        self.cryptocurrency_current_price = []
+        self.cryptocurrency_plot_time = []
 
-        # plotting litecoin
-        self.ltc_xlist = []
-        self.ltc_y_actual_list = []
-        self.ltc_y_predict_list = []
-        self.ltc_current_price = []
-        self.ltc_plot_time = []
-
+        #Tables for tweets
         header = ['TimeStamp', 'Tweet', 'Sentiment']
 
-        self.btc_table.setColumnCount(3)
-        self.btc_table.setColumnWidth(0, 170)
-        self.btc_table.setColumnWidth(1, 800)
+        self.cryptocurrency_table.setColumnCount(3)
+        self.cryptocurrency_table.setColumnWidth(0, 170)
+        self.cryptocurrency_table.setColumnWidth(1, 800)
 
-        self.btc_table.setHorizontalHeaderLabels(header)
-        self.btc_table.horizontalHeader().setResizeMode(1, QHeaderView.Stretch)
+        self.cryptocurrency_table.setHorizontalHeaderLabels(header)
+        self.cryptocurrency_table.horizontalHeader().setResizeMode(1, QHeaderView.Stretch)
 
-        self.btcFigure = Figure()
-        self.ltcFigure = Figure()
-        self.ethFigure = Figure()
+        self.cryptocurrencyFigure = Figure()
 
         # this is the Canvas Widget that displays the `figure`
         # it takes the `figure` instance as a parameter to __init__
-        self.btcCanvas = FigureCanvas(self.btcFigure)
-        self.ltcCanvas = FigureCanvas(self.ltcFigure)
-        self.ethCanvas = FigureCanvas(self.ethFigure)
+        self.cryptocurrencyCanvas = FigureCanvas(self.cryptocurrencyFigure)
 
-        self.btc_ax = self.btcFigure.add_subplot(111)
-        self.ltc_ax = self.btcFigure.add_subplot(111)
-        self.eth_ax = self.btcFigure.add_subplot(111)
+        self.cryptocurrency_ax = self.cryptocurrencyFigure.add_subplot(111)
 
         #self.plot(1,1,1)
-####rememember!!!self.collect_data()
+        #self.collect_data()
 
         self.home_UI()
-        self.bitcoin_home_UI()
-        self.litecoin_home_UI()
-        self.etherium_home_UI()
+        self.cryptocurrency_home_UI()
+        self.notification_home_UI()
         self.setWindowTitle("Sentment Trader")
+        self.setWindowIcon(QIcon(logo_path))
         self.resize(1450, 720)
 
         self.process_data()
 
     def home_UI(self):
         layout = QFormLayout()
-        layout.addRow("Name", QLineEdit())
-        layout.addRow("Address", QLineEdit())
+        label_image = QLabel()
+        label_image.setAlignment(Qt.AlignCenter)
+        logo = QPixmap(logo_path)
+        label_image.setPixmap(logo)
+        layout.addWidget(label_image)
+
+        disclaimer_text = "**DISCLAIMER! This application does not promise to be 100% accurate, we are not " \
+                          "responsible for any losses that might occur trading " + crypto_config.CRYPTOCURRENCY + "."
+        disclaimer_label = QLabel(disclaimer_text)
+
+        instructions_text = "Application may take a few hours before building up adequet training set of an unseen cryptocurrency"
+        instructions_label = QLabel(instructions_text)
+        disclaimer_label.setAlignment(Qt.AlignCenter)
+        instructions_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(disclaimer_label)
+        layout.addWidget(instructions_label)
         self.setTabText(0, "Home")
         self.home.setLayout(layout)
 
-    def bitcoin_home_UI(self):
-        layout = QFormLayout() #QFormLayout()
-        self.btc_predict_label.setAlignment(Qt.AlignCenter)
-        self.btc_sentiment_label.setAlignment(Qt.AlignCenter)
-        layout.addWidget(self.btc_sentiment_label)
-        layout.addWidget(self.btc_predict_label)
-        layout.addWidget(self.btc_price_label)
+    def cryptocurrency_home_UI(self):
+        layout = QFormLayout()
+        layout.addWidget(self.cryptocurrency_sentiment_label)
         # this is the Navigation widget
         # it takes the Canvas widget and a parent
-        self.btc_toolbar = NavigationToolbar(self.btcCanvas, self)
+        self.cryptocurrency_toolbar = NavigationToolbar(self.cryptocurrencyCanvas, self)
 
-        layout.addWidget(self.btc_toolbar)
-        layout.addWidget(self.btcCanvas)
-        layout.addWidget(self.btc_table)
+        layout.addWidget(self.cryptocurrency_toolbar)
+        layout.addWidget(self.cryptocurrencyCanvas)
+        layout.addWidget(self.cryptocurrency_table)
 
+        self.setTabText(1, crypto_config.CRYPTOCURRENCY)
+        self.cryptocurrency_home.setLayout(layout)
 
-        self.setTabText(1, "Bitcoin")
-        self.bitcoin_home.setLayout(layout)
-
-    def litecoin_home_UI(self):
+    def notification_home_UI(self):
         layout = QFormLayout()
+        self.setTabText(2, "Notification")
 
-        self.ltc_toolbar = NavigationToolbar(self.ltcCanvas, self)
+        self.email_checkbox = QCheckBox("Email Notifications")
+        self.push_checkbox = QCheckBox("Push Notifications")
+        layout.addRow(self.email_checkbox)
+        layout.addRow(self.push_checkbox)
 
-        layout.addWidget(self.ltc_toolbar)
-        layout.addWidget(self.ltcCanvas)
-        #layout.addWidget(self.btc_table)
+        max_label = QLabel("Alert Above")
+        layout.addRow(max_label)
+        self.max_value = QDoubleSpinBox()
+        layout.addRow(self.max_value)
+        self.min_value = QDoubleSpinBox()
+        min_label = QLabel("Alert Below")
+        layout.addRow(min_label)
+        layout.addRow(self.min_value)
 
-        self.setTabText(2, "Litecoin")
-        self.litecoin_home.setLayout(layout)
+        self.email_address = QLineEdit()
+        layout.addRow("Email", self.email_address)
 
-    def etherium_home_UI(self):
-        layout = QHBoxLayout()
-        layout.addWidget(QLabel("subjects"))
-        layout.addWidget(QCheckBox("Physics"))
-        layout.addWidget(QCheckBox("Maths"))
-        self.setTabText(3, "Etherium")
-        self.etherium_home.setLayout(layout)
+        self.password = QLineEdit()
+        layout.addRow("Password", self.password)
 
-    def plot(self, predict_change, current_price, plot_time, y_predict_list, currency):
+        self.button = QPushButton('Submit', self)
+        self.button.clicked.connect(self.handleButton)
+        layout.addWidget(self.button)
+        self.notification_home.setLayout(layout)
+
+    def handleButton(self):
+        global NOTIFY_CONFIG
+        NOTIFY_CONFIG = {"NOTIFY_CRYPTOCURRENCY_EMAIL": self.email_checkbox.isChecked(),
+                                "NOTIFY_CRYPTOCURRENCY_PUSH": self.push_checkbox.isChecked(),
+                                "CRYPTOCURRENCY_PRICE_ABOVE": float(self.max_value.value()),
+                                "CRYPTOCURRENCY_PRICE_BELOW": float(self.min_value.value()),
+                                "EMAIL": str(self.email_address.text()),
+                                "PASSWORD": str(self.password.text())}
+
+        with open("notify_config.json", "w") as j_file:
+            json.dump(NOTIFY_CONFIG, j_file)
+
+        print("Is email checked" + str(self.email_checkbox.isChecked()))
+        print("Is push checked" + str(self.push_checkbox.isChecked()))
+        print("Max Value " + str(self.max_value.value()))
+        print("Min Value " + str(self.min_value.value()))
+        print("Email is " + str(self.email_address.text()))
+        print("Password is " + str(self.password.text()))
+
+        self.email_checkbox.setChecked(False)
+        self.push_checkbox.setChecked(False)
+        self.max_value.clear()
+        self.min_value.clear()
+        self.email_address.clear()
+        self.password.clear()
+
+    def plot(self, predict_change, current_price, plot_time, y_predict_list):
         ''' plot change'''
         if len(y_predict_list) is 0:#Init
             y_predict_list.append(current_price[-1])
@@ -183,28 +202,16 @@ class SentimentTraderWindow(QTabWidget):
         y_predict_list_graph = [round(float(i)) for i in y_predict_list_graph]
         current_price_graph = [round(float(i)) for i in current_price_graph]
 
-        if currency == "Bitcoin":
-            ax = self.btcFigure.add_subplot(111)
-            ax.clear()
-            ax.cla()
-            ax.remove()
-            ax = self.btcFigure.add_subplot(111)
-            ax.set_title('Bitcoin Price Previous Hours')
-            ax.set_ylabel('Price ($)')
-            ax.set_xlabel('Time (h)')
-            ax.grid()
-            ax.set_ylim((min(y_predict_list_graph) - 50), (max(y_predict_list_graph) + 50))
-        elif currency == "Litecoin":
-            ax = self.ltcFigure.add_subplot(111)
-            ax.clear()
-            ax.cla()
-            ax.remove()
-            ax = self.ltcFigure.add_subplot(111)
-            ax.set_title('Litecoin Price Previous Hours')
-            ax.set_ylabel('Price ($)')
-            ax.set_xlabel('Time (h)')
-            ax.grid()
-            ax.set_ylim((min(y_predict_list_graph) - 1), (max(y_predict_list_graph) + 1))
+        ax = self.cryptocurrencyFigure.add_subplot(111)
+        ax.clear()
+        ax.cla()
+        ax.remove()
+        ax = self.cryptocurrencyFigure.add_subplot(111)
+        ax.set_title(crypto_config.CRYPTOCURRENCY + ' Price Previous Hours')
+        ax.set_ylabel('Price ($)')
+        ax.set_xlabel('Time (h)')
+        ax.grid()
+        ax.set_ylim((min(y_predict_list_graph) - 50), (max(y_predict_list_graph) + 50))
 
         print(current_price_graph)
         print(predict_xList)
@@ -213,38 +220,51 @@ class SentimentTraderWindow(QTabWidget):
         ax.plot(predict_xList[:-1], current_price_graph, label='Actual Price')
         ax.plot(predict_xList, y_predict_list_graph, label='Linear Prediction')
         ax.legend(loc='upper left')
-        if currency == "Bitcoin":
-            self.btcCanvas.draw_idle()
-        elif currency == "Litecoin":
-            self.ltcCanvas.draw_idle()
+        self.cryptocurrencyCanvas.draw_idle()
 
     def process_data(self):
         self.workerThread.start()
 
-    def update_tweets_table(self, tweets):
+    def update_tweets_table(self, tweets, refresh):
         row = 0
         # do at end
+        if refresh:
+            while self.cryptocurrency_table.rowCount() > 0:
+                print("Deleting table")
+                self.cryptocurrency_table.removeRow(0)
+            self.cryptocurrency_table.setRowCount(0)
         for tweet in tweets:
-            rowPosition = self.btc_table.rowCount()
-            self.btc_table.insertRow(rowPosition)
-            self.btc_table.setItem(rowPosition, 0, QTableWidgetItem(str(tweet['created_at'])))
-            self.btc_table.setItem(rowPosition, 1, QTableWidgetItem(
+            rowPosition = self.cryptocurrency_table.rowCount()
+            self.cryptocurrency_table.insertRow(rowPosition)
+            self.cryptocurrency_table.setItem(rowPosition, 0, QTableWidgetItem(str(tweet['created_at'])))
+            self.cryptocurrency_table.setItem(rowPosition, 1, QTableWidgetItem(
                 str(tweet['formatted_text'].encode('utf8'))))  # tweet['formatted_text']
-            self.btc_table.setItem(rowPosition, 2, QTableWidgetItem(str(tweet['sentiment']['compound'])))
+            self.cryptocurrency_table.setItem(rowPosition, 2, QTableWidgetItem(str(tweet['sentiment']['compound'])))
             row = row + 1
 
-class WorkerThread(QThread):
-    def __init__(self, parent=None):
-        super(WorkerThread, self).__init__(parent)
-        #window = SentimentTraderWindow()
 
-    def analyse_data(self, formatted_tweets, filename, exchange, coin, current_price, plot_time, y_predict_list):
+    def get_current_price(self, exchange):
+        timeout = 1
+        str_error = "No Price Yet"
+        while str_error:
+            try:
+                price_info = collect_prices.get_price_info(exchange)
+                j_info = json.loads(price_info)
+                str_error = None
+            except Exception as str_error:
+                print(str_error)
+                time.sleep(timeout)
+        return j_info
+
+    def update_current_sentiment(self, average_compound):
+        self.cryptocurrency_sentiment_label.setText("Current Sentiment : " + str(average_compound))
+
+    def analyse_data(self, formatted_tweets, filename, exchange, coin):
+        current_price = self.cryptocurrency_current_price
+        plot_time = self.cryptocurrency_plot_time
+        y_predict_list = self.cryptocurrency_y_predict_list
+
         global predict_change
-
-        while self.btc_table.rowCount() > 0:
-            self.btc_table.removeRow(0)
-        self.btc_table.setRowCount(0)
-
         tweetsInHour = []
         # remove duplicated tweets
         formatted_tweets = [i for n, i in enumerate(formatted_tweets) if i not in formatted_tweets[n + 1:]]
@@ -263,17 +283,7 @@ class WorkerThread(QThread):
 
         file_exists = os.path.isfile(filename)
 
-        timeout = 1
-        str_error = "No price yet"
-        while str_error:
-            try:
-                price_info = collect_prices.get_price_info(exchange)
-                j_info = json.loads(price_info)
-                str_error = None
-            except Exception as str_error:
-                print(str_error)
-                time.sleep(timeout)
-                #timeout *= 1
+        j_info = self.get_current_price(exchange)
 
         change = j_info['ticker']['change']
         volume = j_info['ticker']['volume']
@@ -292,76 +302,62 @@ class WorkerThread(QThread):
         # Make
         predict_change = predict.generate_linear_prediction_model(cryptoFeature, filename)
 
-        if (float(predict_change) >= notify_config.BITCOIN_PRICE_ABOVE or float(predict_change)
-                <= notify_config.BITCOIN_PRICE_BELOW):
-            notify.push_notification(predict_change, "Bitcoin")
+        if (float(predict_change) >= notify_config.CRYPTOCURRENCY_PRICE_ABOVE or float(predict_change)
+                <= notify_config.CRYPTOCURRENCY_PRICE_BELOW):
+            notify.push_notification(predict_change, crypto_config.CRYPTOCURRENCY)
 
         #Plotting
         current_price.append(price)
         plot_time.append(datetime.datetime.now().strftime("%H:%M:%S"))
         print(predict_change)
 
-        self.plot(predict_change, current_price, plot_time, y_predict_list, coin)
+        self.plot(predict_change, current_price, plot_time, y_predict_list)
 
-        self.btc_sentiment_label.setText("The current sentiment is " + str(average_compound))
-        self.btc_predict_label.setText("Predicted change in price is " + str(btc_predict_change))
-        self.btc_price_label.setText("Actual change in price is " + str(change))
+        #self.cryptocurrency_sentiment_label.setText("Current Sentiment : " + str(average_compound))
 
         if (predict_change):
             print("The sentiment of the last 60 minutes for " + coin + " is : " + str(
                 cryptoFeature['Sentiment'][0]) + " - The predicted change in price is : " + predict_change)
 
-    def run(self):
-        global formatted_btc_tweets
-        global formatted_ltc_tweets
-        global formatted_eth_tweets
-        global num_of_passes
-        global btc_predict_change
-        global btc_predict_change_model
-        global ltc_predict_change_model
-        global btc_var_pred_text
-        global btcTree
 
-        num_of_passes = num_of_passes + 1
+class WorkerThread(QThread):
+    def __init__(self, parent=None):
+        super(WorkerThread, self).__init__(parent)
+
+    def run(self):
+        global formatted_cryptocurrency_tweets
+        global num_of_passes
+
+        num_of_passes += 1
 
         print('Pass number : ' + str(num_of_passes))
 
-        # bitcoin
-        btcTweets = collect_tweets.collect_tweets('bitcoin')
-        btcTweets = process_tweets.process_tweets_from_main(btcTweets)
+        # cryptocurrency
+        cryptocurrencyTweets = collect_tweets.collect_tweets(crypto_config.CRYPTOCURRENCY)
+        cryptocurrencyTweets = process_tweets.process_tweets_from_main(cryptocurrencyTweets)
 
-        formatted_btc_tweets.extend(btcTweets)
+        formatted_cryptocurrency_tweets.extend(cryptocurrencyTweets)
 
-        formatted_btc_tweets = [i for n, i in enumerate(formatted_btc_tweets) if i not in formatted_btc_tweets[n + 1:]]
+        formatted_cryptocurrency_tweets = [i for n, i in enumerate(formatted_cryptocurrency_tweets) if i not in formatted_cryptocurrency_tweets[n + 1:]]
 
+        refresh = False
+        if num_of_passes is NUMBER_OF_MINUTES:
+            print("refresh")
+            refresh = True
 
-        if(float(btc_predict_change) >= notify_config.BITCOIN_PRICE_ABOVE or float(btc_predict_change) <= notify_config.BITCOIN_PRICE_BELOW):
-            notify.push_notification(btc_predict_change, "Bitcoin")
+        self.emit(SIGNAL("update_tweets_table"), formatted_cryptocurrency_tweets, crypto_config.CRYPTOCURRENCY, refresh)
 
-        # litecoin
-        ltcTweets = collect_tweets.collect_tweets('litecoin')
-        ltcTweets = process_tweets.process_tweets_from_main(ltcTweets)
+        # average compound
+        average_compound = float(sum(d['sentiment']['compound'] for d in formatted_cryptocurrency_tweets)) / len(
+            formatted_cryptocurrency_tweets)
+        self.emit(SIGNAL("update_current_sentiment"), average_compound)
 
-        formatted_ltc_tweets.extend(ltcTweets)
-
-        # etherium
-        ethTweets = collect_tweets.collect_tweets('etherium')
-        ethTweets = process_tweets.process_tweets_from_main(ethTweets)
-
-        formatted_eth_tweets.extend(ethTweets)
-
-        self.emit(SIGNAL("update_tweets_table"), formatted_btc_tweets)
-
-        if (num_of_passes is 3):
+        if num_of_passes is NUMBER_OF_MINUTES:
             num_of_passes = 0
-            self.analyse_data(formatted_btc_tweets, "btcFeature.csv", "btc-usd", "Bitcoin", self.btc_current_price, self.btc_plot_time, self.btc_y_predict_list,)
-            self.analyse_data(formatted_ltc_tweets, "ltcFeature.csv", "ltc-usd", "Litecoin", self.ltc_current_price, self.ltc_plot_time, self.ltc_y_predict_list)
+            self.emit(SIGNAL("analyse_data"), formatted_cryptocurrency_tweets, crypto_config.FEATURE_FILE,
+                      crypto_config.EXCHANGE, crypto_config.CRYPTOCURRENCY)
 
-           # self.analyse_data(formatted_eth_tweets, "ethFeature.csv", "eth-usd", "Etherium")
-            #formatted_eth_tweets = []
-
-
-def main():
+if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = SentimentTraderWindow()
     timer = QTimer()
@@ -369,6 +365,3 @@ def main():
     timer.start(60000)
     window.show()
     sys.exit(app.exec_())
-
-if __name__ == '__main__':
-    main()
