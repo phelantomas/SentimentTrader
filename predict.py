@@ -10,16 +10,49 @@ from sklearn import datasets, linear_model
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.linear_model import LinearRegression
-#import matplotlib.pyplot as plt
 import log_creater as lc
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, r2_score
+from sklearn import preprocessing
+from sklearn import utils
+from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.datasets import make_classification
+import matplotlib.pyplot as plt
+from sklearn import tree
+from sklearn.model_selection import cross_val_score
+import os
 
 # file logger
 sentiment_logger = lc.setup_logger('second_logger', 'sentiment_logfile.log')
+
+def generate_linear_prediction_model_init(file):
+      try:
+            lm = LinearRegression()
+            df = pd.read_csv(file, error_bad_lines=False)
+            X = df['Sentiment']
+            Y = df['Change']
+
+            X = X.values.reshape(len(X), 1)
+            Y = Y.values.reshape(len(Y), 1)
+
+            lm.fit(X, Y)
+
+            return lm
+      except:
+            print("Not enough values yet.")
 
 def generate_linear_prediction_model(feature, file):
       try:
             lm = LinearRegression()
             df = pd.read_csv(file, error_bad_lines=False)
+
+            shift = -1
+            df.Change = df.Change.shift(shift)
+            df = df.dropna()
             X = df['Sentiment']
             Y = df['Change']
 
@@ -34,39 +67,43 @@ def generate_linear_prediction_model(feature, file):
 
             dfFeature = pd.DataFrame(regFeature)
 
-            predicted_change = str(lm.predict(dfFeature))
+            predicted_change = str(lm.predict(dfFeature)[0][0])
             log_info = "The sentiment of the last 60 minutes is : " + str(sentiment) + " - The predicted change in price is :" + predicted_change
 
-            sentiment_logger.info(log_info)
             return predicted_change
       except:
             print("Not enough values yet.")
 
-def generate_prediction_model(feature):
-      df = pd.read_csv('/home/tomas/PycharmProjects/CollegeProject/features.csv')
 
-      df.change = df.change.round()
-      df = df.drop("date", 1)
+def generate_forest_prediction_model(feature, file):
+      try:
+            rf = RandomForestRegressor()
+            df = pd.read_csv(file, error_bad_lines=False)
+            shift = -1
+            df.Change = df.Change.shift(shift)
+            df = df.dropna()
 
-      X = df.iloc[:, :-1]
-      y = df.iloc[:, -1:].values.ravel()
+            X = df['Sentiment']
+            Y = df['Change']
 
-      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=5)
+            X = X.values.reshape(len(X), 1)
+            Y = Y.values.reshape(len(Y), 1)
 
+            X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.33, random_state=5)
 
-      # Create linear regression object
-      regr = linear_model.LogisticRegression()
+            rf.fit(X, Y)
 
-      # Train the model using the training sets
-      regr.fit(X_train, y_train)
+            sentiment = feature['Sentiment'][0]
 
-      sentiment = feature['Sentiment'][0]
-      volume = feature['Volume'][0]
+            regFeature = {'Sentiment': [sentiment]}
 
-      regFeature = {'sentiment': [sentiment], 'volume': [volume]}
+            dfFeature = pd.DataFrame(regFeature)
 
-      dfFeature = pd.DataFrame(regFeature)
-      print("The predicted change in price is :", regr.predict(dfFeature))
+            predicted_change = str(rf.predict(dfFeature)[0])
+
+            return predicted_change
+      except Exception as e:
+            print("Not enough values yet. " + str(e))
 
 def test_accuracy(regr, X_test, y_test):
       # Make predictions using the testing set

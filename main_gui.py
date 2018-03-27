@@ -2,10 +2,11 @@ import datetime
 import os.path
 import sys
 import time
-from PyQt4 import QtCore
+import json
 
 import pandas as pd
 from PyQt4.QtCore import *
+from PyQt4 import QtCore
 from PyQt4.QtGui import *
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
@@ -13,18 +14,16 @@ from matplotlib.figure import Figure
 
 import collect_prices
 import collect_tweets
-import json
 import predict
 import process_tweets
 import notify
-import notify_config
 import crypto_config
 
 NOTIFY_CONFIG = json.load(open("notify_config.json"))
 formatted_cryptocurrency_tweets = []
 num_of_passes = 0
 logo_path = "/home/phelan/Project/CollegeProject/crypto_logo.png"
-NUMBER_OF_MINUTES = 60
+NUMBER_OF_MINUTES = 3
 
 class SentimentTraderWindow(QTabWidget):
     def __init__(self, parent=None):
@@ -57,9 +56,12 @@ class SentimentTraderWindow(QTabWidget):
         #plotting cryptocurrency
         self.cryptocurrency_xlist = []
         self.cryptocurrency_y_actual_list = []
-        self.cryptocurrency_y_predict_list = []
+        self.cryptocurrency_linear_y_predict_list = []
+        self.cryptocurrency_forest_y_predict_list = []
+        self.cryptocurrency_average_y_predict_list = []
         self.cryptocurrency_current_price = []
         self.cryptocurrency_plot_time = []
+        formatted_cryptocurrency_tweets = []
 
         #Tables for tweets
         header = ['TimeStamp', 'Tweet', 'Sentiment']
@@ -78,9 +80,6 @@ class SentimentTraderWindow(QTabWidget):
         self.cryptocurrencyCanvas = FigureCanvas(self.cryptocurrencyFigure)
 
         self.cryptocurrency_ax = self.cryptocurrencyFigure.add_subplot(111)
-
-        #self.plot(1,1,1)
-        #self.collect_data()
 
         self.home_UI()
         self.cryptocurrency_home_UI()
@@ -138,17 +137,18 @@ class SentimentTraderWindow(QTabWidget):
         max_label = QLabel("Alert Above")
         layout.addRow(max_label)
         self.max_value = QDoubleSpinBox()
+        self.max_value.setMaximum(1000)
+        self.max_value.setMinimum(-1000)
         layout.addRow(self.max_value)
         self.min_value = QDoubleSpinBox()
+        self.min_value.setMaximum(1000)
+        self.min_value.setMinimum(-1000)
         min_label = QLabel("Alert Below")
         layout.addRow(min_label)
         layout.addRow(self.min_value)
 
         self.email_address = QLineEdit()
         layout.addRow("Email", self.email_address)
-
-        self.password = QLineEdit()
-        layout.addRow("Password", self.password)
 
         self.button = QPushButton('Submit', self)
         self.button.clicked.connect(self.handleButton)
@@ -161,8 +161,7 @@ class SentimentTraderWindow(QTabWidget):
                                 "NOTIFY_CRYPTOCURRENCY_PUSH": self.push_checkbox.isChecked(),
                                 "CRYPTOCURRENCY_PRICE_ABOVE": float(self.max_value.value()),
                                 "CRYPTOCURRENCY_PRICE_BELOW": float(self.min_value.value()),
-                                "EMAIL": str(self.email_address.text()),
-                                "PASSWORD": str(self.password.text())}
+                                "EMAIL": str(self.email_address.text())}
 
         with open("notify_config.json", "w") as j_file:
             json.dump(NOTIFY_CONFIG, j_file)
@@ -172,34 +171,43 @@ class SentimentTraderWindow(QTabWidget):
         print("Max Value " + str(self.max_value.value()))
         print("Min Value " + str(self.min_value.value()))
         print("Email is " + str(self.email_address.text()))
-        print("Password is " + str(self.password.text()))
 
         self.email_checkbox.setChecked(False)
         self.push_checkbox.setChecked(False)
         self.max_value.clear()
         self.min_value.clear()
         self.email_address.clear()
-        self.password.clear()
 
-    def plot(self, predict_change, current_price, plot_time, y_predict_list):
+    def plot(self, linear_predict_change, forest_predict_change):
         ''' plot change'''
-        if len(y_predict_list) is 0:#Init
-            y_predict_list.append(current_price[-1])
+        if len(self.cryptocurrency_linear_y_predict_list) is 0:#Init
+            self.cryptocurrency_linear_y_predict_list.append(self.cryptocurrency_current_price[-1])
+            self.cryptocurrency_forest_y_predict_list.append(self.cryptocurrency_current_price[-1])
+            self.cryptocurrency_average_y_predict_list.append(self.cryptocurrency_current_price[-1])
 
-        print("Current " + str(current_price[-1]))
-        y_predict_list.append(float(current_price[-1]) + float(predict_change))
+        print("Current " + str(self.cryptocurrency_current_price[-1]))
+        self.cryptocurrency_linear_y_predict_list.append(float(self.cryptocurrency_current_price[-1]) + float(linear_predict_change))
+        self.cryptocurrency_forest_y_predict_list.append(float(self.cryptocurrency_current_price[-1]) + float(forest_predict_change))
+        self.cryptocurrency_average_y_predict_list.append((self.cryptocurrency_linear_y_predict_list[-1] +
+                                                          self.cryptocurrency_forest_y_predict_list[-1])/2)
 
-        if len(current_price) > 8:
-            current_price_graph = current_price[-8:]
-            y_predict_list_graph = y_predict_list[-9:]
-            predict_xList = plot_time[-8:]
+        if len(self.cryptocurrency_current_price) > 8:
+            current_price_graph = self.cryptocurrency_current_price[-8:]
+            linear_y_predict_list_graph = self.cryptocurrency_linear_y_predict_list[-9:]
+            forest_y_predict_list_graph = self.cryptocurrency_forest_y_predict_list[-9:]
+            average_y_predict_list_graph = self.cryptocurrency_average_y_predict_list[-9:]
+            predict_xList = self.cryptocurrency_plot_time[-8:]
         else:
-            current_price_graph = current_price
-            y_predict_list_graph = y_predict_list
-            predict_xList = plot_time[:]
+            current_price_graph = self.cryptocurrency_current_price
+            linear_y_predict_list_graph = self.cryptocurrency_linear_y_predict_list
+            forest_y_predict_list_graph = self.cryptocurrency_forest_y_predict_list
+            average_y_predict_list_graph = self.cryptocurrency_average_y_predict_list
+            predict_xList = self.cryptocurrency_plot_time[:]
         predict_xList.append("Predicted Change")
 
-        y_predict_list_graph = [round(float(i)) for i in y_predict_list_graph]
+        linear_y_predict_list_graph = [round(float(i)) for i in linear_y_predict_list_graph]
+        forest_y_predict_list_graph = [round(float(i)) for i in forest_y_predict_list_graph]
+        average_y_predict_list_graph = [round(float(i)) for i in average_y_predict_list_graph]
         current_price_graph = [round(float(i)) for i in current_price_graph]
 
         ax = self.cryptocurrencyFigure.add_subplot(111)
@@ -211,14 +219,19 @@ class SentimentTraderWindow(QTabWidget):
         ax.set_ylabel('Price ($)')
         ax.set_xlabel('Time (h)')
         ax.grid()
-        ax.set_ylim((min(y_predict_list_graph) - 50), (max(y_predict_list_graph) + 50))
+        #Scales chart dynamically
+        ax.set_ylim((min(min(linear_y_predict_list_graph),min(forest_y_predict_list_graph), min(current_price_graph)) - 5),
+                    (max(max(linear_y_predict_list_graph), max(forest_y_predict_list_graph), max(current_price_graph)) + 5))
 
         print(current_price_graph)
         print(predict_xList)
-        print(y_predict_list_graph)
+        print(linear_y_predict_list_graph)
+        print(forest_y_predict_list_graph)
 
         ax.plot(predict_xList[:-1], current_price_graph, label='Actual Price')
-        ax.plot(predict_xList, y_predict_list_graph, label='Linear Prediction')
+        ax.plot(predict_xList, linear_y_predict_list_graph, label='Linear Prediction')
+        ax.plot(predict_xList, forest_y_predict_list_graph, label='Forest Prediction')
+        ax.plot(predict_xList, average_y_predict_list_graph, label='Average Prediction')
         ax.legend(loc='upper left')
         self.cryptocurrencyCanvas.draw_idle()
 
@@ -226,13 +239,13 @@ class SentimentTraderWindow(QTabWidget):
         self.workerThread.start()
 
     def update_tweets_table(self, tweets, refresh):
-        row = 0
+        print(len(tweets))
         # do at end
         if refresh:
-            while self.cryptocurrency_table.rowCount() > 0:
-                print("Deleting table")
-                self.cryptocurrency_table.removeRow(0)
-            self.cryptocurrency_table.setRowCount(0)
+            print(refresh)
+            for i in reversed(range(self.cryptocurrency_table.rowCount())):
+                self.cryptocurrency_table.removeRow(i)
+            #self.cryptocurrency_table.rowCount(0)
         for tweet in tweets:
             rowPosition = self.cryptocurrency_table.rowCount()
             self.cryptocurrency_table.insertRow(rowPosition)
@@ -240,7 +253,6 @@ class SentimentTraderWindow(QTabWidget):
             self.cryptocurrency_table.setItem(rowPosition, 1, QTableWidgetItem(
                 str(tweet['formatted_text'].encode('utf8'))))  # tweet['formatted_text']
             self.cryptocurrency_table.setItem(rowPosition, 2, QTableWidgetItem(str(tweet['sentiment']['compound'])))
-            row = row + 1
 
 
     def get_current_price(self, exchange):
@@ -259,25 +271,29 @@ class SentimentTraderWindow(QTabWidget):
     def update_current_sentiment(self, average_compound):
         self.cryptocurrency_sentiment_label.setText("Current Sentiment : " + str(average_compound))
 
-    def analyse_data(self, formatted_tweets, filename, exchange, coin):
-        current_price = self.cryptocurrency_current_price
-        plot_time = self.cryptocurrency_plot_time
-        y_predict_list = self.cryptocurrency_y_predict_list
+    def notify_user(self, predicted_change, cryptocurrency):
+        if NOTIFY_CONFIG["NOTIFY_CRYPTOCURRENCY_PUSH"] is True:
+            if (float(predicted_change) >= NOTIFY_CONFIG['CRYPTOCURRENCY_PRICE_ABOVE'] or float(predicted_change)
+                    <= NOTIFY_CONFIG['CRYPTOCURRENCY_PRICE_BELOW']):
+                notify.push_notification(predicted_change, cryptocurrency)
+        if NOTIFY_CONFIG["NOTIFY_CRYPTOCURRENCY_EMAIL"] is True:
+            if (float(predicted_change) >= NOTIFY_CONFIG['CRYPTOCURRENCY_PRICE_ABOVE'] or float(predicted_change)
+                    <= NOTIFY_CONFIG['CRYPTOCURRENCY_PRICE_BELOW']):
+                notify.send_email(predicted_change, cryptocurrency, NOTIFY_CONFIG["EMAIL"])
 
+
+    def analyse_data(self, filename, exchange, coin):
+        global formatted_cryptocurrency_tweets
         global predict_change
         tweetsInHour = []
-        # remove duplicated tweets
-        formatted_tweets = [i for n, i in enumerate(formatted_tweets) if i not in formatted_tweets[n + 1:]]
-
-        print("Number of unique tweets in an hour for " + coin + " is " + str(len(formatted_tweets)))
 
         tweets_from_one_hour = datetime.datetime.now() - datetime.timedelta(hours=2)#2 hours now due to time saving
 
-        for tweet in formatted_tweets:
+        for tweet in formatted_cryptocurrency_tweets:
             created_at = datetime.datetime.strptime(tweet['created_at'], '%Y-%m-%dT%H:%M:%S')
             if created_at > tweets_from_one_hour:
                 tweetsInHour.append(tweet)
-        formatted_tweets = []
+        formatted_cryptocurrency_tweets = []
 
         print("Number of unique tweets in an hour for " + coin + " is " + str(len(tweetsInHour)))
 
@@ -299,25 +315,24 @@ class SentimentTraderWindow(QTabWidget):
 
         pd.DataFrame.from_dict(data=cryptoFeature, orient='columns').to_csv(filename, mode='a',
                                                                             header=not file_exists)
-        # Make
-        predict_change = predict.generate_linear_prediction_model(cryptoFeature, filename)
+        # Make Predictions
+        linear_predict_change = predict.generate_linear_prediction_model(cryptoFeature, filename)
+        forest_predict_change = predict.generate_forest_prediction_model(cryptoFeature, filename)
 
-        if (float(predict_change) >= notify_config.CRYPTOCURRENCY_PRICE_ABOVE or float(predict_change)
-                <= notify_config.CRYPTOCURRENCY_PRICE_BELOW):
-            notify.push_notification(predict_change, crypto_config.CRYPTOCURRENCY)
+        self.notify_user(linear_predict_change, coin)
+        #self.notify_user(forest_predict_change, coin)
 
         #Plotting
-        current_price.append(price)
-        plot_time.append(datetime.datetime.now().strftime("%H:%M:%S"))
-        print(predict_change)
+        self.cryptocurrency_current_price.append(price)
+        self.cryptocurrency_plot_time.append(datetime.datetime.now().strftime("%H:%M:%S"))
+        print(linear_predict_change)
+        print(forest_predict_change)
 
-        self.plot(predict_change, current_price, plot_time, y_predict_list)
+        self.plot(linear_predict_change, forest_predict_change)
 
-        #self.cryptocurrency_sentiment_label.setText("Current Sentiment : " + str(average_compound))
-
-        if (predict_change):
+        if (linear_predict_change):
             print("The sentiment of the last 60 minutes for " + coin + " is : " + str(
-                cryptoFeature['Sentiment'][0]) + " - The predicted change in price is : " + predict_change)
+                cryptoFeature['Sentiment'][0]) + " - The predicted change in price is : " + linear_predict_change)
 
 
 class WorkerThread(QThread):
@@ -336,16 +351,17 @@ class WorkerThread(QThread):
         cryptocurrencyTweets = collect_tweets.collect_tweets(crypto_config.CRYPTOCURRENCY)
         cryptocurrencyTweets = process_tweets.process_tweets_from_main(cryptocurrencyTweets)
 
+        tweets_for_table = [x for x in cryptocurrencyTweets if x not in formatted_cryptocurrency_tweets]
         formatted_cryptocurrency_tweets.extend(cryptocurrencyTweets)
 
-        formatted_cryptocurrency_tweets = [i for n, i in enumerate(formatted_cryptocurrency_tweets) if i not in formatted_cryptocurrency_tweets[n + 1:]]
+        # remove duplicated tweets
+        formatted_cryptocurrency_tweets = [i for n, i in enumerate(formatted_cryptocurrency_tweets)
+                                                if i not in formatted_cryptocurrency_tweets[n + 1:]]
 
         refresh = False
         if num_of_passes is NUMBER_OF_MINUTES:
-            print("refresh")
             refresh = True
-
-        self.emit(SIGNAL("update_tweets_table"), formatted_cryptocurrency_tweets, crypto_config.CRYPTOCURRENCY, refresh)
+        self.emit(SIGNAL("update_tweets_table"), tweets_for_table, refresh)
 
         # average compound
         average_compound = float(sum(d['sentiment']['compound'] for d in formatted_cryptocurrency_tweets)) / len(
@@ -354,7 +370,7 @@ class WorkerThread(QThread):
 
         if num_of_passes is NUMBER_OF_MINUTES:
             num_of_passes = 0
-            self.emit(SIGNAL("analyse_data"), formatted_cryptocurrency_tweets, crypto_config.FEATURE_FILE,
+            self.emit(SIGNAL("analyse_data"), crypto_config.FEATURE_FILE,
                       crypto_config.EXCHANGE, crypto_config.CRYPTOCURRENCY)
 
 if __name__ == '__main__':
