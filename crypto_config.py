@@ -1,3 +1,3 @@
 CRYPTOCURRENCY = "Bitcoin"
 EXCHANGE = "btc-usd"
-FEATURE_FILE = "btcFeature.csv"
+FEATURE_FILE = "Features/btcFeature.csv"
