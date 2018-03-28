@@ -245,10 +245,10 @@ class SentimentTraderWindow(QTabWidget):
             self.cryptocurrency_forest_y_predict_list.append(self.cryptocurrency_current_price[-1])
             self.cryptocurrency_average_y_predict_list.append(self.cryptocurrency_current_price[-1])
 
-        if len(self.cryptocurrency_current_price) > 1:
+        if len(self.cryptocurrency_current_price) is not 0:
             self.update_prediction_table(self.cryptocurrency_plot_time[-1], self.cryptocurrency_linear_y_predict_list[-1],
                                          self.cryptocurrency_forest_y_predict_list[-1],self.cryptocurrency_average_y_predict_list[-1],
-                                         self.cryptocurrency_current_price[-2])
+                                         self.cryptocurrency_current_price[-1])
 
         print("Current " + str(self.cryptocurrency_current_price[-1]))
         self.cryptocurrency_linear_y_predict_list.append(float(self.cryptocurrency_current_price[-1]) + float(linear_predict_change))
