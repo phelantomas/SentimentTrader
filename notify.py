@@ -3,15 +3,15 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import subprocess as s
 
-def send_email(predicted_change, coin, toaddr):
-    print("Starting")
+def send_email(predicted_change, sentiment, coin, toaddr):
     fromaddr = "cryptocurrency.sentiment@gmail.com"
     msg = MIMEMultipart()
     msg['From'] = fromaddr
     msg['To'] = toaddr
     msg['Subject'] = "Predicted Price Change Of " + coin
 
-    body = "The price of " + coin + " will change by " + predicted_change
+    body = "The sentiment of the last 60 minutes for " + coin + " is : " + sentiment + \
+           " - The predicted change in price is : " + predicted_change
     msg.attach(MIMEText(body, 'plain'))
     server = smtplib.SMTP("smtp.gmail.com", "587")
     server.starttls()
@@ -23,6 +23,8 @@ def send_email(predicted_change, coin, toaddr):
     server.quit()
     print("Over")
 
-def push_notification(predicted_change, coin):
-    message = "The predicted change for " + coin + " is " + predicted_change
+def push_notification(predicted_change, sentiment, coin):
+    message = coin + "\n" + \
+    "Sentiment : " + sentiment + "\n" + \
+    "Predicted Change :" + predicted_change
     s.call(['notify-send', message])
