@@ -213,6 +213,7 @@ class SentimentTraderWindow(QTabWidget):
                 self.cryptocurrency_table_predictions.setItem(rowPosition, 4, QTableWidgetItem(str(row['Actual Prediction'])))
 
     def update_prediction_table(self, time_stamp, linear_prediction, forest_prediction, average_prediction, actual_price):
+        time_stamp = datetime.datetime.now().strftime("%y:%m:%d-") + time_stamp
         prediction_dict = {"TimeStamp" : [time_stamp], "Linear Prediction" : [linear_prediction], "Forest Prediction": [forest_prediction],
                                 "Average Prediction" : [average_prediction], "Actual Prediction": [actual_price]}
 
@@ -244,7 +245,7 @@ class SentimentTraderWindow(QTabWidget):
             self.cryptocurrency_forest_y_predict_list.append(self.cryptocurrency_current_price[-1])
             self.cryptocurrency_average_y_predict_list.append(self.cryptocurrency_current_price[-1])
 
-        if len(self.cryptocurrency_current_price) > 2:
+        if len(self.cryptocurrency_current_price) > 1:
             self.update_prediction_table(self.cryptocurrency_plot_time[-1], self.cryptocurrency_linear_y_predict_list[-1],
                                          self.cryptocurrency_forest_y_predict_list[-1],self.cryptocurrency_average_y_predict_list[-1],
                                          self.cryptocurrency_current_price[-2])
