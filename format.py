@@ -7,12 +7,15 @@ Brief: Includes methods for processing raw tweet data
 from string import ascii_lowercase
 from nltk.corpus import words as english_words, stopwords
 import Porter
+import re
 
 porter_stemming = Porter.PorterStemmer()
 
 english = set(w.lower() for w in english_words.words())
 stop = set(w.lower() for w in stopwords.words())
 
+def remove_url(text):
+    return re.sub(r"http\S+", "", text)
 
 def remove_excess_whitespace(text):
     return ' '.join(text.split())

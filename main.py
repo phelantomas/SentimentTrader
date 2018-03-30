@@ -23,7 +23,7 @@ NOTIFY_CONFIG = json.load(open("notify_config.json"))
 formatted_cryptocurrency_tweets = []
 num_of_passes = 0
 logo_path = "/home/phelan/Project/CollegeProject/crypto_logo.png"
-NUMBER_OF_MINUTES = 2
+NUMBER_OF_MINUTES = 60
 
 class SentimentTraderWindow(QTabWidget):
     def __init__(self, parent=None):

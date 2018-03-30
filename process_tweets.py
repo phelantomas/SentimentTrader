@@ -56,21 +56,30 @@ def process_tweets_from_main(tweets):
     invalid_count = 0
     sia = SIA()
     list_of_tweets = []
+    list_of_spam = ["prize", 'contest', 'giveaway', 'giving away', 'free', 'limited time only', 'discount', 'click here', '4u']
 
     for line in tweets:
         j = line.__dict__
         try:
+            # text formatting
+            formatted_text = format.remove_excess_whitespace(j['text'])
+
+            #has spam words, do not add
+            if any(word in formatted_text.lower() for word in list_of_spam):
+                continue
+
+            formatted_text = format.remove_url(formatted_text)
+            j['formatted_text'] = formatted_text
+
             # validate date format
             created_at = datetime.strptime(j['created_at'], '%Y-%m-%dT%H:%M:%S')
-            # datetime.strptime('2016-10-27 22:58:14', '%Y-%m-%d %H:%M:%S')
-
-            # text formatting
-            formatted_text = format.format_full(j['text'])
-            j['formatted_text'] = formatted_text
 
             # sentiment
             sent = sia.polarity_scores(formatted_text)
             j['sentiment'] = sent
+
+            if j['sentiment']['compound'] == 0:
+                continue
 
             list_of_tweets.append(j)
             valid_count += 1
@@ -81,12 +90,6 @@ def process_tweets_from_main(tweets):
             if (invalid_count % 100 == 0):
                 print('Invalid:' + str(created_at), j['created_at'])
             continue
-    #print("Successfully processed", len(list_of_tweets), "tweets")
-    twitter_info = "Successfully processed " + str(len(list_of_tweets)) + " tweets"
-    twitter_logger.info(twitter_info)
-    for tweet in list_of_tweets:
-        info = "OG Text : " + tweet['text'] + " Formatted : " + tweet['formatted_text'] + " " + str(tweet['sentiment'])
-        twitter_logger.info(info)
     return list_of_tweets
 
 
