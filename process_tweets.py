@@ -4,9 +4,10 @@ License Employed: GNU General Public License v3.0
 Brief:
 '''
 
-import argparse, json, format
+import argparse, json
 from nltk.sentiment.vader import SentimentIntensityAnalyzer as SIA
 from datetime import datetime
+import format
 import log_creater as lc
 
 twitter_logger = lc.setup_logger('first_logger', 'twitter_sentiment_test_logfile.log')
@@ -22,7 +23,6 @@ def process_tweets_from_file(fin, fout):
             try:
                 # validate date format
                 created_at = datetime.strptime(j['created_at'], '%Y-%m-%dT%H:%M:%S')
-                # datetime.strptime('2016-10-27 22:58:14', '%Y-%m-%d %H:%M:%S')
 
                 # text formatting
                 formatted_text = format.format_full(j['text'])
@@ -56,7 +56,15 @@ def process_tweets_from_main(tweets):
     invalid_count = 0
     sia = SIA()
     list_of_tweets = []
-    list_of_spam = ["prize", 'contest', 'giveaway', 'giving away', 'free', 'limited time only', 'discount', 'click here', '4u']
+    list_of_spam = [' prize ', 'prize ', ' prize.',
+                    ' contest ', 'contest ', ' contest.',
+                    ' giveaway ', 'giveaway ', ' giveaway.',
+                    ' giving away ','giving away ',' giving away.',
+                    ' free ', 'free ', ' free.',
+                    ' limited time only ', 'limited time only ',' limited time only.',
+                    ' discount ', 'discount ', ' discount.',
+                    ' click here ', 'click here ', ' click here.',
+                    ' 4u ', '4u ', ' 4u.']
 
     for line in tweets:
         j = line.__dict__
