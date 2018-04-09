@@ -23,6 +23,7 @@ six = "==1.10.0"
 tweepy = "==3.5.0"
 twython = "==3.6.0"
 "urllib3" = "==1.22"
+statsmodels = "*"
 
 [requires]
 python_version = "2.7"
