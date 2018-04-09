@@ -13,7 +13,7 @@ AATCUOP is a 4th year college project that is an attempt to create an automated 
 Then follow the prompts to finish installing.
 4. Setup up tweepy:
 You will need a twitter account and developer keys in order to make use of the twitter API. Follow the setup [here](https://dev.twitter.com/twitterkit/android/advanced-setup). Once the keys are got, update the keys in the tweepy_config.py file.
-5. Select cryptocurrency to predict:
+5. Select a cryptocurrency to predict:
 Once the applications requirements are installed, you will need to configure the application with your desired cryptocurrency. By default it chooses Bitcoin. If you want to change this you will need to edit the cryptocurrency_config.py file.
 
 7. Run:
