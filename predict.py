@@ -3,12 +3,14 @@ Author: Tomas Phelan
 License Employed: GNU General Public License v3.0
 Brief:
 '''
+
 from sklearn.linear_model import LinearRegression
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.ensemble import RandomForestRegressor
+import statsmodels.api as sm
 
 def generate_linear_prediction_model(feature, file):
       try:
@@ -39,6 +41,35 @@ def generate_linear_prediction_model(feature, file):
             print("Not enough values yet.")
             return None
 
+def generate_multi_linear_prediction_model(feature, file):
+      try:
+            df = pd.read_csv(file, error_bad_lines=False)
+
+            shift = -1
+            df.Change = df.Change.shift(shift)
+            df = df.dropna()
+
+            targets = pd.DataFrame(df, columns=["Change"])
+
+            X = df[["NoOfTweets", "Sentiment", "Volume"]]
+            y = targets["Change"]
+
+            model = sm.OLS(y, X).fit()
+
+            sentiment = feature['Sentiment'][0]
+            volume = float(feature['Volume'][0])
+            noOfTweets = feature['NoOfTweets'][0]
+
+            regFeature = {"NoOfTweets": noOfTweets,'Sentiment': [sentiment], 'Volume': [volume]}
+
+            dfFeature = pd.DataFrame(regFeature)
+
+            predicted_change = str(model.predict(dfFeature).values[0])
+
+            return predicted_change
+      except:
+            print("Not enough values yet.")
+            return None
 
 def generate_forest_prediction_model(feature, file):
       try:
@@ -56,7 +87,7 @@ def generate_forest_prediction_model(feature, file):
 
             X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.33, random_state=5)
 
-            rf.fit(X, Y)
+            rf.fit(X, Y)#.ravel()
 
             sentiment = feature['Sentiment'][0]
 
