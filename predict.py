@@ -87,7 +87,7 @@ def generate_forest_prediction_model(feature, file):
 
             X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.33, random_state=5)
 
-            rf.fit(X, Y)#.ravel()
+            rf.fit(X, Y.ravel())#.ravel()
 
             sentiment = feature['Sentiment'][0]
 

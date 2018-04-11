@@ -11,6 +11,12 @@ import time
 import json
 import pandas as pd
 
+#print(str(sys.platform()))
+if sys.platform.startswith("linux"):
+    print("Linux")
+else:
+    print("Mac")
+
 from PyQt4.QtCore import *
 from PyQt4 import QtCore
 from PyQt4.QtGui import *
@@ -412,8 +418,8 @@ class SentimentTraderWindow(QTabWidget):
 
         if linear_predict_change is not None and multi_linear_predict_change is not None and forest_predict_change is not None:
             #get average prediction
-            average_prediction = (linear_predict_change + multi_linear_predict_change + forest_predict_change)/3
-            self.notify_user(average_prediction, str(
+            average_prediction = (float(linear_predict_change) + float(multi_linear_predict_change) + float(forest_predict_change))/3
+            self.notify_user(str(average_prediction), str(
                 cryptoFeature['Sentiment'][0]), coin)
 
             #Plotting
