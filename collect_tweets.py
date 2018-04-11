@@ -6,7 +6,6 @@ This is intended to be called every minute.
 '''
 
 import argparse, json, datetime, tweepy, tweepy_config
-import log_creater as lc
 
 class Tweet:
     def __init__(self, author, text, created_at):

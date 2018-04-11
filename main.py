@@ -40,6 +40,7 @@ class SentimentTraderWindow(QTabWidget):
         self.connect(self.workerThread, QtCore.SIGNAL("update_tweets_table"), self.update_tweets_table)
         self.connect(self.workerThread, QtCore.SIGNAL("analyse_data"), self.analyse_data)
         self.connect(self.workerThread, QtCore.SIGNAL("update_current_sentiment"), self.update_current_sentiment)
+        self.connect(self.workerThread, QtCore.SIGNAL("get_current_price"), self.get_current_price)
 
         self.home = QWidget()
         self.cryptocurrency_home = QScrollArea()
@@ -345,12 +346,12 @@ class SentimentTraderWindow(QTabWidget):
                 str(tweet['formatted_text'].encode('utf8'))))
             self.cryptocurrency_table_tweets.setItem(rowPosition, 2, QTableWidgetItem(str(tweet['sentiment']['compound'])))
 
-    def get_current_price(self, exchange):
+    def get_current_price(self):
         timeout = 1
         str_error = "No Price Yet"
         while str_error:
             try:
-                price_info = collect_prices.get_price_info(exchange)
+                price_info = collect_prices.get_price_info(crypto_config.EXCHANGE)
                 j_info = json.loads(price_info)
                 str_error = None
             except Exception as str_error:
@@ -371,7 +372,7 @@ class SentimentTraderWindow(QTabWidget):
                     <= NOTIFY_CONFIG['CRYPTOCURRENCY_PRICE_BELOW']):
                 notify.send_email(predicted_change, sentiment, cryptocurrency, NOTIFY_CONFIG["EMAIL"])
 
-    def analyse_data(self, filename, exchange, coin):
+    def analyse_data(self, filename, coin):
         global formatted_cryptocurrency_tweets
         global predict_change
         tweetsInHour = []
@@ -388,7 +389,7 @@ class SentimentTraderWindow(QTabWidget):
 
         file_exists = os.path.isfile(filename)
 
-        j_info = self.get_current_price(exchange)
+        j_info = self.get_current_price()
 
         change = j_info['ticker']['change']
         volume = j_info['ticker']['volume']
@@ -411,12 +412,10 @@ class SentimentTraderWindow(QTabWidget):
 
         if linear_predict_change is not None and multi_linear_predict_change is not None and forest_predict_change is not None:
             #get average prediction
-            self.notify_user(linear_predict_change, str(
+            average_prediction = (linear_predict_change + multi_linear_predict_change + forest_predict_change)/3
+            self.notify_user(average_prediction, str(
                 cryptoFeature['Sentiment'][0]), coin)
-            self.notify_user(multi_linear_predict_change, str(
-                cryptoFeature['Sentiment'][0]),coin, )
-            self.notify_user(forest_predict_change, str(
-                cryptoFeature['Sentiment'][0]), coin, )
+
             #Plotting
             self.cryptocurrency_current_price.append(price)
             self.cryptocurrency_plot_time.append(datetime.datetime.now().strftime("%H:%M:%S"))
@@ -453,17 +452,17 @@ class WorkerThread(QThread):
 
         #will clear the table every specified minutes
         refresh = False
-        if num_of_passes is NUMBER_OF_MINUTES:
+        if num_of_passes >= NUMBER_OF_MINUTES:
             refresh = True
         self.emit(SIGNAL("update_tweets_table"), tweets_for_table, refresh)
 
-        # average compound
+        # average compound sentiment
         average_compound = float(sum(d['sentiment']['compound'] for d in formatted_cryptocurrency_tweets)) / len(
             formatted_cryptocurrency_tweets)
         self.emit(SIGNAL("update_current_sentiment"), average_compound)
 
-        #
         if num_of_passes >= NUMBER_OF_MINUTES:
+            #j_info = self.emit(SIGNAL("get_current_price"))
             num_of_passes = 0
             self.emit(SIGNAL("analyse_data"), crypto_config.FEATURE_FILE,
                       crypto_config.EXCHANGE, crypto_config.CRYPTOCURRENCY)
