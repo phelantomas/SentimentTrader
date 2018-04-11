@@ -11,7 +11,7 @@ AATCUOP is a 4th year college project that is an attempt to create an automated 
 `$ python` 
 `>>> import nltk` 
 `>>> nltk.download`
-Then follow the prompts to finish installing. 
+Then follow the prompts to finish installing.  
 For Mac, simply follow the steps [here](http://nlpworkgroup.postach.io/post/install-nltk-for-python-2-7-on-mac-osx) if the above doesn't work.
 5. Setup up tweepy:
 You will need a twitter account and developer keys in order to make use of the twitter API. Follow the setup [here](https://dev.twitter.com/twitterkit/android/advanced-setup). Once the keys are got, update the keys in the tweepy_config.py file.
@@ -24,5 +24,5 @@ Once the applications requirements are installed, you will need to configure the
 You can download pre-made data sets for Bitcoin, Litecoin, and Ethereum [here](https://drive.google.com/drive/folders/1HNm2PQ5S0rT9aoI6KvhhNoTgQoOcyU9T).
 
 ### References
-[1] Colianni, Rosales, Signorotti. *Algorithmic Trading of Cryptocurrency Based on Twitter Sentiment Analysis* http://cs229.stanford.edu/proj2015/029_report.pdf.
+[1] Colianni, Rosales, Signorotti. *Algorithmic Trading of Cryptocurrency Based on Twitter Sentiment Analysis* http://cs229.stanford.edu/proj2015/029_report.pdf.  
 [2] Website with links to all documentation.
