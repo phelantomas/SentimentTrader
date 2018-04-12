@@ -490,8 +490,7 @@ class WorkerThread(QThread):
         if num_of_passes >= NUMBER_OF_MINUTES:
             #j_info = self.emit(SIGNAL("get_current_price"))
             num_of_passes = 0
-            self.emit(SIGNAL("analyse_data"), crypto_config.FEATURE_FILE,
-                      crypto_config.EXCHANGE, crypto_config.CRYPTOCURRENCY)
+            self.emit(SIGNAL("analyse_data"), crypto_config.FEATURE_FILE, crypto_config.CRYPTOCURRENCY)
 
 if __name__ == '__main__':
     minute = 60000
