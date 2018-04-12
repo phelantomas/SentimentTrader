@@ -96,11 +96,11 @@ class SentimentTraderWindow(QTabWidget):
 
         if sys.platform.startswith("linux"):
             self.cryptocurrency_table_predictions.horizontalHeader().setResizeMode(QHeaderView.Stretch)
+            self.cryptocurrencyFigure = Figure()
         else:
-            self.cryptocurrency_table_predictions.horizontalHeader().setResizeMode(QHeaderView.ResizeToContents)
-            self.cryptocurrency_table_predictions.setMinimumWidth(695)
-
-        self.cryptocurrencyFigure = Figure()
+            self.cryptocurrency_table_predictions.setMinimumWidth(1200)
+            self.cryptocurrency_table_predictions.horizontalHeader().setResizeMode(QHeaderView.Stretch)
+            self.cryptocurrencyFigure = Figure(figsize=(40,10))
 
         # this is the Canvas Widget that displays the `figure`
         # it takes the `figure` instance as a parameter to __init__
