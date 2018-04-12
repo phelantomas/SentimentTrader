@@ -25,4 +25,4 @@ You can download pre-made data sets for Bitcoin, Litecoin, and Ethereum [here](h
 
 ### References
 [1] Colianni, Rosales, Signorotti. *Algorithmic Trading of Cryptocurrency Based on Twitter Sentiment Analysis* http://cs229.stanford.edu/proj2015/029_report.pdf.  
-[2] Website with links to all documentation.
+[2] Website with links to all documentation [here](http://glasnost.itcarlow.ie/~softeng4/C00192548/index.html).
