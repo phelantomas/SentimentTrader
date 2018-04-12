@@ -2,6 +2,8 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import subprocess as s
+import sys
+import os
 
 def send_email(predicted_change, sentiment, coin, toaddr):
     fromaddr = "cryptocurrency.sentiment@gmail.com"
@@ -27,8 +29,18 @@ def push_notification(predicted_change, sentiment, coin):
     message = coin + "\n" + \
     "Sentiment : " + sentiment + "\n" + \
     "Predicted Change :" + predicted_change
-    s.call(['notify-send', message])
+    if sys.platform.startswith("Linux"):
+        s.call(['notify-send', message])
+    else: # Mac
+        os.system("""
+        osascript -e 'display notification"{}" with title "{}" subtitle "{}"'
+                """.format("Sentiment : " + sentiment,coin, "Predicted Change :" + predicted_change))
 
 def push_notification_details():
-    message = "Your details have been updated."
-    s.call(['notify-send', message])
+    if sys.platform.startswith("Linux"):
+        message = "Your details have been updated."
+        s.call(['notify-send', message])
+    else: #Mac
+        os.system("""
+                    osascript -e 'display notification"{}" with title "{}"'
+        """.format("Your details have been updated.", "Successful"))

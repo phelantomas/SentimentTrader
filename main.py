@@ -65,14 +65,25 @@ class SentimentTraderWindow(QTabWidget):
         self.cryptocurrency_table_tweets = QTableWidget()
         header = ['TimeStamp', 'Tweet', 'Sentiment']
 
-        self.cryptocurrency_table_tweets.setColumnCount(3)
-        self.cryptocurrency_table_tweets.setColumnWidth(0, 170)
-        self.cryptocurrency_table_tweets.setColumnWidth(1, 800)
+        if sys.platform.startswith("Linux"):
+            self.cryptocurrency_table_tweets.setColumnCount(3)
+            self.cryptocurrency_table_tweets.setColumnWidth(0, 170)
+            self.cryptocurrency_table_tweets.setColumnWidth(1, 800)
 
-        self.cryptocurrency_table_tweets.setHorizontalHeaderLabels(header)
-        self.cryptocurrency_table_tweets.horizontalHeader().setResizeMode(1, QHeaderView.Stretch)
+            self.cryptocurrency_table_tweets.setHorizontalHeaderLabels(header)
+            self.cryptocurrency_table_tweets.horizontalHeader().setResizeMode(1, QHeaderView.Stretch)
 
-        self.cryptocurrency_table_tweets.setFixedHeight(655)
+            self.cryptocurrency_table_tweets.setFixedHeight(655)
+        else:
+            self.cryptocurrency_table_tweets.setColumnCount(3)
+            self.cryptocurrency_table_tweets.setColumnWidth(0, 160)
+            self.cryptocurrency_table_tweets.setColumnWidth(1, 917)
+            self.cryptocurrency_table_tweets.setColumnWidth(2, 80)
+
+            self.cryptocurrency_table_tweets.setHorizontalHeaderLabels(header)
+
+            self.cryptocurrency_table_tweets.setFixedHeight(655)
+
 
         # Tables for past predictions
         self.cryptocurrency_table_predictions = QTableWidget()
@@ -83,6 +94,9 @@ class SentimentTraderWindow(QTabWidget):
 
         self.cryptocurrency_table_predictions.setHorizontalHeaderLabels(header)
         self.cryptocurrency_table_predictions.horizontalHeader().setResizeMode(QHeaderView.Stretch)
+
+        if not sys.platform.startswith("Linux"):
+            self.cryptocurrency_table_predictions.setMidLineWidth(690)
 
         self.cryptocurrencyFigure = Figure()
 
@@ -108,8 +122,10 @@ class SentimentTraderWindow(QTabWidget):
         self.notification_home_UI()
         self.setWindowTitle("Sentment Trader")
         self.setWindowIcon(QIcon(logo_path))
-        self.resize(1450, 720)
-
+        if sys.platform.startswith("Linux"):
+            self.resize(1450, 720)
+        else:
+            self.resize(1250, 720)
         #prepare widgets
         self.init_plot()
         self.init_prediction_table()
@@ -200,6 +216,8 @@ class SentimentTraderWindow(QTabWidget):
 
         with open("notify_config.json", "w") as j_file:
             json.dump(NOTIFY_CONFIG, j_file)
+
+        notify.push_notification_details()
 
         print("Is email checked" + str(self.email_checkbox.isChecked()))
         print("Is push checked" + str(self.push_checkbox.isChecked()))
@@ -373,7 +391,7 @@ class SentimentTraderWindow(QTabWidget):
             if (float(predicted_change) >= NOTIFY_CONFIG['CRYPTOCURRENCY_PRICE_ABOVE'] or float(predicted_change)
                     <= NOTIFY_CONFIG['CRYPTOCURRENCY_PRICE_BELOW']):
                 notify.push_notification(predicted_change, sentiment, cryptocurrency)
-        if NOTIFY_CONFIG["NOTIFY_CRYPTOCURRENCY_EMAIL"] is True:
+        if NOTIFY_CONFIG["NOTIFY_CRYPTOCURRENCY_EMAIL"] is True and sys.platform.startswith("Linux"):
             if (float(predicted_change) >= NOTIFY_CONFIG['CRYPTOCURRENCY_PRICE_ABOVE'] or float(predicted_change)
                     <= NOTIFY_CONFIG['CRYPTOCURRENCY_PRICE_BELOW']):
                 notify.send_email(predicted_change, sentiment, cryptocurrency, NOTIFY_CONFIG["EMAIL"])
