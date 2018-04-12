@@ -98,7 +98,7 @@ class SentimentTraderWindow(QTabWidget):
             self.cryptocurrency_table_predictions.horizontalHeader().setResizeMode(QHeaderView.Stretch)
         else:
             self.cryptocurrency_table_predictions.horizontalHeader().setResizeMode(QHeaderView.ResizeToContents)
-            self.cryptocurrency_table_predictions.setMinimumWidth(690)
+            self.cryptocurrency_table_predictions.setMinimumWidth(695)
 
         self.cryptocurrencyFigure = Figure()
 
