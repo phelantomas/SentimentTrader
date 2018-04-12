@@ -67,7 +67,7 @@ class SentimentTraderWindow(QTabWidget):
 
         self.cryptocurrency_table_tweets.setColumnCount(3)
 
-        if sys.platform.startswith("Linux"):
+        if sys.platform.startswith("linux"):
             self.cryptocurrency_table_tweets.setColumnWidth(0, 170)
             self.cryptocurrency_table_tweets.setColumnWidth(1, 800)
 
@@ -94,7 +94,7 @@ class SentimentTraderWindow(QTabWidget):
 
         self.cryptocurrency_table_predictions.horizontalHeader().setResizeMode(QHeaderView.Stretch)
 
-        if sys.platform.startswith("Linux"):
+        if sys.platform.startswith("linux"):
             self.cryptocurrency_table_predictions.horizontalHeader().setResizeMode(QHeaderView.Stretch)
         else:
             self.cryptocurrency_table_predictions.horizontalHeader().setResizeMode(QHeaderView.ResizeToContents)
@@ -124,7 +124,7 @@ class SentimentTraderWindow(QTabWidget):
         self.notification_home_UI()
         self.setWindowTitle("Sentment Trader")
         self.setWindowIcon(QIcon(logo_path))
-        if sys.platform.startswith("Linux"):
+        if sys.platform.startswith("linux"):
             self.resize(1450, 720)
         else:
             self.resize(1250, 720)
@@ -393,7 +393,7 @@ class SentimentTraderWindow(QTabWidget):
             if (float(predicted_change) >= NOTIFY_CONFIG['CRYPTOCURRENCY_PRICE_ABOVE'] or float(predicted_change)
                     <= NOTIFY_CONFIG['CRYPTOCURRENCY_PRICE_BELOW']):
                 notify.push_notification(predicted_change, sentiment, cryptocurrency)
-        if NOTIFY_CONFIG["NOTIFY_CRYPTOCURRENCY_EMAIL"] is True and sys.platform.startswith("Linux"):
+        if NOTIFY_CONFIG["NOTIFY_CRYPTOCURRENCY_EMAIL"] is True and sys.platform.startswith("linux"):
             if (float(predicted_change) >= NOTIFY_CONFIG['CRYPTOCURRENCY_PRICE_ABOVE'] or float(predicted_change)
                     <= NOTIFY_CONFIG['CRYPTOCURRENCY_PRICE_BELOW']):
                 notify.send_email(predicted_change, sentiment, cryptocurrency, NOTIFY_CONFIG["EMAIL"])
