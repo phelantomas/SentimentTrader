@@ -28,3 +28,7 @@ def push_notification(predicted_change, sentiment, coin):
     "Sentiment : " + sentiment + "\n" + \
     "Predicted Change :" + predicted_change
     s.call(['notify-send', message])
+
+def push_notification_details():
+    message = "Your details have been updated."
+    s.call(['notify-send', message])
