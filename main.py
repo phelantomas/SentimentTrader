@@ -65,24 +65,22 @@ class SentimentTraderWindow(QTabWidget):
         self.cryptocurrency_table_tweets = QTableWidget()
         header = ['TimeStamp', 'Tweet', 'Sentiment']
 
+        self.cryptocurrency_table_tweets.setColumnCount(3)
+
         if sys.platform.startswith("Linux"):
-            self.cryptocurrency_table_tweets.setColumnCount(3)
             self.cryptocurrency_table_tweets.setColumnWidth(0, 170)
             self.cryptocurrency_table_tweets.setColumnWidth(1, 800)
 
             self.cryptocurrency_table_tweets.setHorizontalHeaderLabels(header)
             self.cryptocurrency_table_tweets.horizontalHeader().setResizeMode(1, QHeaderView.Stretch)
-
-            self.cryptocurrency_table_tweets.setFixedHeight(655)
         else:
-            self.cryptocurrency_table_tweets.setColumnCount(3)
             self.cryptocurrency_table_tweets.setColumnWidth(0, 160)
             self.cryptocurrency_table_tweets.setColumnWidth(1, 917)
             self.cryptocurrency_table_tweets.setColumnWidth(2, 80)
+            self.cryptocurrency_table_tweets.setMinimumWidth(1195)
 
             self.cryptocurrency_table_tweets.setHorizontalHeaderLabels(header)
-
-            self.cryptocurrency_table_tweets.setFixedHeight(655)
+        self.cryptocurrency_table_tweets.setFixedHeight(655)
 
 
         # Tables for past predictions
@@ -93,10 +91,14 @@ class SentimentTraderWindow(QTabWidget):
         self.cryptocurrency_table_predictions.setColumnCount(6)
 
         self.cryptocurrency_table_predictions.setHorizontalHeaderLabels(header)
+
         self.cryptocurrency_table_predictions.horizontalHeader().setResizeMode(QHeaderView.Stretch)
 
-        if not sys.platform.startswith("Linux"):
-            self.cryptocurrency_table_predictions.setMidLineWidth(690)
+        if sys.platform.startswith("Linux"):
+            self.cryptocurrency_table_predictions.horizontalHeader().setResizeMode(QHeaderView.Stretch)
+        else:
+            self.cryptocurrency_table_predictions.horizontalHeader().setResizeMode(QHeaderView.ResizeToContents)
+            self.cryptocurrency_table_predictions.setMinimumWidth(690)
 
         self.cryptocurrencyFigure = Figure()
 
