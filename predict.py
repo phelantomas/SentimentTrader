@@ -79,19 +79,18 @@ def generate_forest_prediction_model(feature, file):
             df.Change = df.Change.shift(shift)
             df = df.dropna()
 
-            X = df['Sentiment']
+            X = df[["NoOfTweets", "Sentiment", "Volume"]]
             Y = df['Change']
-
-            X = X.values.reshape(len(X), 1)
-            Y = Y.values.reshape(len(Y), 1)
 
             X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.33, random_state=5)
 
-            rf.fit(X, Y.ravel())#.ravel()
+            rf.fit(X, Y.ravel())
 
             sentiment = feature['Sentiment'][0]
+            volume = float(feature['Volume'][0])
+            noOfTweets = feature['NoOfTweets'][0]
 
-            regFeature = {'Sentiment': [sentiment]}
+            regFeature = {"NoOfTweets": noOfTweets, 'Sentiment': [sentiment], 'Volume': [volume]}
 
             dfFeature = pd.DataFrame(regFeature)
 
