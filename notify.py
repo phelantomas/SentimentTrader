@@ -29,7 +29,7 @@ def push_notification(predicted_change, sentiment, coin):
     message = coin + "\n" + \
     "Sentiment : " + sentiment + "\n" + \
     "Predicted Change :" + predicted_change
-    if sys.platform.startswith("Linux"):
+    if sys.platform.startswith("linux"):
         s.call(['notify-send', message])
     else: # Mac
         os.system("""
@@ -37,7 +37,7 @@ def push_notification(predicted_change, sentiment, coin):
                 """.format("Sentiment : " + sentiment,coin, "Predicted Change :" + predicted_change))
 
 def push_notification_details():
-    if sys.platform.startswith("Linux"):
+    if sys.platform.startswith("linux"):
         message = "Your details have been updated."
         s.call(['notify-send', message])
     else: #Mac
