@@ -73,7 +73,7 @@ def generate_multi_linear_prediction_model(feature, file):
 
 def generate_forest_prediction_model(feature, file):
       try:
-            rf = RandomForestRegressor()
+            rf = RandomForestRegressor(max_leaf_nodes=2, min_samples_leaf=50, max_depth=150)
             df = pd.read_csv(file, error_bad_lines=False)
             shift = -1
             df.Change = df.Change.shift(shift)
