@@ -4,9 +4,10 @@
 AATCUOP is a 4th year college project that is an attempt to create an automated system for Bitcoin trading, utilizing sentiment analysis of Twitter to build a predictive model.
 
 ### Setup
-1. Requires PyQt4, guide to install for Linux [here.](https://www.saltycrane.com/blog/2008/01/how-to-install-pyqt4-on-ubuntu-linux/) For mac, follow [here](https://robonobodojo.wordpress.com/2017/02/08/installing-pyqt4-on-mac-osx/) instead.
-3. Install requirements from the Pipfile:
-`$ pipenv install`
+1. Clone the repo
+2. Requires PyQt4, guide to install for Linux [here.](https://www.saltycrane.com/blog/2008/01/how-to-install-pyqt4-on-ubuntu-linux/) For mac, follow [here](https://robonobodojo.wordpress.com/2017/02/08/installing-pyqt4-on-mac-osx/) instead.
+3. Install requirements from the requirements.txt file:
+`$ sudo pip install -r requirements.txt`
 4. Download the NLTK corpora for Linux: 
 `$ python` 
 `>>> import nltk` 
