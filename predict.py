@@ -4,12 +4,15 @@ License Employed: GNU General Public License v3.0
 Brief:
 '''
 
-from sklearn.linear_model import LinearRegression
+
 import pandas as pd
 import numpy as np
+
+from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.ensemble import RandomForestRegressor
+from sklearn import tree
 import statsmodels.api as sm
 
 def generate_linear_prediction_model(feature, file):
@@ -69,6 +72,37 @@ def generate_multi_linear_prediction_model(feature, file):
             return predicted_change
       except:
             print("Not enough values yet.")
+            return None
+
+
+def generate_tree_prediction_model(feature, file):
+      try:
+            dt = tree.DecisionTreeRegressor(max_leaf_nodes=2, min_samples_leaf=50, max_depth=150)
+            df = pd.read_csv(file, error_bad_lines=False)
+            shift = -1
+            df.Change = df.Change.shift(shift)
+            df = df.dropna()
+
+            X = df[["NoOfTweets", "Sentiment", "Volume"]]
+            Y = df['Change']
+
+            X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.33, random_state=5)
+
+            dt.fit(X, Y.ravel())
+
+            sentiment = feature['Sentiment'][0]
+            volume = float(feature['Volume'][0])
+            noOfTweets = feature['NoOfTweets'][0]
+
+            regFeature = {"NoOfTweets": noOfTweets, 'Sentiment': [sentiment], 'Volume': [volume]}
+
+            dfFeature = pd.DataFrame(regFeature)
+
+            predicted_change = str(dt.predict(dfFeature)[0])
+
+            return predicted_change
+      except Exception as e:
+            print("Not enough values yet. " + str(e))
             return None
 
 def generate_forest_prediction_model(feature, file):
