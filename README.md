@@ -1,25 +1,28 @@
-
+  
   
 # Automated Algorithmnic Trading Of Cryptocurrencies Utilising Opinion Mining
 
 AATCUOP is a 4th year college project that is an attempt to create an automated system for Bitcoin trading, utilizing sentiment analysis of Twitter to build a predictive model.
 
+ 1. List item
+
 ### Setup
 1. Clone the repository: `$ git clone https://github.com/phelantomas/CollegeProject.git`
 2. `$ cd CollegeProject`
 3. Requires PyQt4, guide to install for Linux:
-	3.1. `$ sudo apt-get install python-qt4`. 
+	3.1. `$ sudo apt-get install python-qt4`.   
 For mac:  
-	3.2. `$ brew install cartr/qt4/pyqt`. 
+	3.2. `$ brew install cartr/qt4/pyqt`.   
 4. Install requirements from the requirements.txt file:
-`$ sudo pip install -r requirements.txt`. 
-	4.1. For Mac `$ easy_install pandas`   
-5. Download the NLTK corpora for Linux and Mac: 
-`$ python` 
+`$ sudo pip install -r requirements.txt`.   
+	4.1. For Mac, afterwards: `$ easy_install pandas`   
+5. Download the NLTK corpora for Linux and Mac:   
+`$ python`   
 `>>> import nltk` 
 `>>> nltk.download`
 Then follow the prompts to finish installing.  
-For Mac, simply follow the steps [here](http://nlpworkgroup.postach.io/post/install-nltk-for-python-2-7-on-mac-osx) if the above doesn't work.
+`>>> quit()`  
+For Mac, simply follow the steps [here](http://nlpworkgroup.postach.io/post/install-nltk-for-python-2-7-on-mac-osx) if the above doesn't work.  
 6. Setup up tweepy:
 You will need a twitter account and developer keys in order to make use of the twitter API. Follow the setup [here](https://dev.twitter.com/twitterkit/android/advanced-setup). Once the keys are got, update the keys in the tweepy_config.py file.
 7. Select a cryptocurrency to predict:
