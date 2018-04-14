@@ -8,12 +8,12 @@ AATCUOP is a 4th year college project that is an attempt to create an automated 
 1. Clone the repository: `$ git clone https://github.com/phelantomas/CollegeProject.git`
 2. `$ cd CollegeProject`
 3. Requires PyQt4, guide to install for Linux:
-	2.1. `$ sudo apt-get install python-qt4`
-For mac:
-	2.2. `$ brew install cartr/qt4/pyqt`
+	2.1. `$ sudo apt-get install python-qt4`. 
+For mac:  
+	2.2. `$ brew install cartr/qt4/pyqt`. 
 4. Install requirements from the requirements.txt file:
-`$ sudo pip install -r requirements.txt`
-	4.1. For Mac `$ easy_install pandas`
+`$ sudo pip install -r requirements.txt`. 
+	4.1. For Mac `$ easy_install pandas`   
 5. Download the NLTK corpora for Linux and Mac: 
 `$ python` 
 `>>> import nltk` 
