@@ -11,12 +11,6 @@ import time
 import json
 import pandas as pd
 
-#print(str(sys.platform()))
-if sys.platform.startswith("linux"):
-    print("Linux")
-else:
-    print("Mac")
-
 from PyQt4.QtCore import *
 from PyQt4 import QtCore
 from PyQt4.QtGui import *
@@ -182,13 +176,16 @@ class SentimentTraderWindow(QTabWidget):
         notification_text = "Notification Setup"
         notification_label = QLabel(notification_text)
         notification_label.setAlignment(Qt.AlignCenter)
+        notification_label.setMaximumHeight(25)
         layout.addWidget(notification_label)
+
         self.email_checkbox = QCheckBox("Email Notifications")
         self.push_checkbox = QCheckBox("Push Notifications")
         layout.addWidget(self.email_checkbox)
         layout.addWidget(self.push_checkbox)
 
         max_label = QLabel("Alert Above")
+        max_label.setMaximumHeight(25)
         layout.addWidget(max_label)
         self.max_value = QDoubleSpinBox()
         self.max_value.setMaximum(1000)
@@ -198,15 +195,18 @@ class SentimentTraderWindow(QTabWidget):
         self.min_value.setMaximum(1000)
         self.min_value.setMinimum(-1000)
         min_label = QLabel("Alert Below")
+        min_label.setMaximumHeight(25)
         layout.addWidget(min_label)
         layout.addWidget(self.min_value)
 
         email_label = QLabel("Email")
+        email_label.setMaximumHeight(25)
         layout.addWidget(email_label)
         self.email_address = QLineEdit()
         layout.addWidget(self.email_address)
 
         self.button = QPushButton('Submit', self)
+        self.button.setMaximumHeight(25)
         self.button.clicked.connect(self.handleButton)
         layout.addWidget(self.button)
         self.notification_home.setLayout(layout)
