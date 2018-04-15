@@ -524,7 +524,6 @@ class WorkerThread(QThread):
         self.emit(SIGNAL("update_current_sentiment"), average_compound)
 
         if num_of_passes >= NUMBER_OF_MINUTES:
-            #j_info = self.emit(SIGNAL("get_current_price"))
             num_of_passes = 0
             self.emit(SIGNAL("analyse_data"), sentiment_config.FEATURE_FILE, sentiment_config.NAME)
 

@@ -20,10 +20,8 @@ def send_email(predicted_change, sentiment, coin, toaddr):
     server.ehlo()
     server.login(fromaddr, "Analysis1234")
     text = msg.as_string()
-    print(text)
     server.sendmail(fromaddr, toaddr, text)
     server.quit()
-    print("Over")
 
 def push_notification(predicted_change, sentiment, coin):
     message = coin + "\n" + \
