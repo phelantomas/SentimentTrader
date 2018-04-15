@@ -34,7 +34,7 @@ Once the applications requirements are installed, you will need to configure the
 ### Setup Config
 By default it works with bitcoin, however, this can be easily changed with a slight modification to the sentiment_config.py file.
 
-![alt text](https://github.com/phelantomas/CollegeProject/Img/config_btc.png)
+![alt text](https://github.com/phelantomas/CollegeProject/blob/master/Img/config_btc.png)
 
 To change cryptocurrency, simply replace the details of this file with that of your desired cryptocurrency, for example, litecoin:
 
