@@ -38,11 +38,11 @@ By default it works with bitcoin, however, this can be easily changed with a sli
 
 To change cryptocurrency, simply replace the details of this file with that of your desired cryptocurrency, for example, litecoin:
 
-![alt text](https://github.com/phelantomas/CollegeProject/tree/master/Img/config_ltc.png)
+![alt text](https://github.com/phelantomas/CollegeProject/blob/master/Img/config_ltc.png)
 
 To swap to stocks, change type to STOCK, and the rest to the desired stock, for example, Bank of America:
 
-![alt text](https://github.com/phelantomas/CollegeProject/tree/master/Img/config_stock.png)
+![alt text](https://github.com/phelantomas/CollegeProject/blob/master/Img/config_stock.png)
 
 Once done, just run the main.py file, and it will now be running for your selected option.
 
