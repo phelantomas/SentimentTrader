@@ -13,7 +13,7 @@ AATCUOP is a 4th year college project that is an attempt to create an automated 
 `$ python setup.py install`     
 `$ cd ..`    
 3. Go into the main project `$ cd CollegeProject`  
-4. Requires PyQt4, guide to install for Linux: `$ sudo apt-get install python-qt4`.   
+4. Requires PyQt4, to install for Linux: `$ sudo apt-get install python-qt4`.   
 For mac: `$ brew install cartr/qt4/pyqt`.   
 5. Install requirements from the requirements.txt file:
 `$ sudo pip install -r requirements.txt`.   
