@@ -25,7 +25,7 @@ Then follow the prompts to finish installing.
 `>>> quit()`  
 For Mac, simply follow the steps [here](http://nlpworkgroup.postach.io/post/install-nltk-for-python-2-7-on-mac-osx) if the above doesn't work.  
 7. Setup up tweepy:
-You will need a twitter account and developer keys in order to make use of the twitter API. Follow the setup [here](https://dev.twitter.com/twitterkit/android/advanced-setup). Once the keys are got, update the keys in the tweepy_config.py file.
+You will need a twitter account and developer keys in order to make use of the twitter API. Follow the setup [here](https://developer.twitter.com/en/docs/basics/authentication/guides/access-tokens). Once the keys are got, update the keys in the tweepy_config.py file.
 8. Select a cryptocurrency to predict:
 Once the applications requirements are installed, you will need to configure the application with your desired cryptocurrency. By default it chooses Bitcoin. If you want to change this you will need to edit the sentiment_config.py file.
 9. Run: `$ python main.py`
