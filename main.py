@@ -17,6 +17,7 @@ from PyQt4.QtGui import *
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
+
 from iexfinance import Stock
 
 import collect_prices
@@ -29,7 +30,6 @@ import sentiment_config
 NOTIFY_CONFIG = json.load(open("notify_config.json"))
 formatted_cryptocurrency_tweets = []
 num_of_passes = 0
-logo_path = "../SentimentTrader/crypto_logo.png"
 NUMBER_OF_MINUTES = 60
 
 class SentimentTraderWindow(QTabWidget):
@@ -52,19 +52,21 @@ class SentimentTraderWindow(QTabWidget):
         self.tweets_home = QWidget()
         self.notification_home = QWidget()
 
+        #Add words to the tab menu
         self.addTab(self.home, "Home")
         self.addTab(self.cryptocurrency_home, sentiment_config.NAME)
         self.addTab(self.tweets_home, "Tweets")
         self.addTab(self.notification_home, "Notification")
 
+        #Shows current sentiment
         self.cryptocurrency_sentiment_label = QLabel()
 
-        #Tables for tweets
         self.cryptocurrency_table_tweets = QTableWidget()
         header = ['TimeStamp', 'Tweet', 'Sentiment']
 
         self.cryptocurrency_table_tweets.setColumnCount(3)
 
+        #Scales for system
         if sys.platform.startswith("linux"):
             self.cryptocurrency_table_tweets.setColumnWidth(0, 170)
             self.cryptocurrency_table_tweets.setColumnWidth(1, 800)
@@ -117,12 +119,16 @@ class SentimentTraderWindow(QTabWidget):
         self.cryptocurrency_current_price = []
         self.cryptocurrency_plot_time = []
 
+        #Images
+        self.logo_path = "../SentimentTrader/Img/crypto_logo.png"
+        self.notification_path = "../SentimentTrader/Img/envelope.png"
+
         self.home_UI()
         self.cryptocurrency_home_UI()
         self.tweets_home_UI()
         self.notification_home_UI()
         self.setWindowTitle("Sentment Trader")
-        self.setWindowIcon(QIcon(logo_path))
+        self.setWindowIcon(QIcon(self.logo_path))
         if sys.platform.startswith("linux"):
             self.resize(1450, 720)
         else:
@@ -136,7 +142,7 @@ class SentimentTraderWindow(QTabWidget):
         layout = QVBoxLayout()
         label_image = QLabel()
         label_image.setAlignment(Qt.AlignCenter)
-        logo = QPixmap(logo_path)
+        logo = QPixmap(self.logo_path)
         label_image.setPixmap(logo)
         layout.addWidget(label_image)
 
@@ -183,6 +189,12 @@ class SentimentTraderWindow(QTabWidget):
         notification_label.setMaximumHeight(25)
         layout.addWidget(notification_label)
 
+        label_image = QLabel()
+        label_image.setAlignment(Qt.AlignCenter)
+        logo = QPixmap(self.notification_path)
+        label_image.setPixmap(logo)
+        layout.addWidget(label_image)
+
         self.email_checkbox = QCheckBox("Email Notifications")
         self.push_checkbox = QCheckBox("Push Notifications")
         layout.addWidget(self.email_checkbox)
@@ -215,6 +227,7 @@ class SentimentTraderWindow(QTabWidget):
         layout.addWidget(self.button)
         self.notification_home.setLayout(layout)
 
+    #Updates the notification files
     def handleButton(self):
         global NOTIFY_CONFIG
         NOTIFY_CONFIG = {"NOTIFY_CRYPTOCURRENCY_EMAIL": self.email_checkbox.isChecked(),
@@ -234,12 +247,14 @@ class SentimentTraderWindow(QTabWidget):
         print("Min Value " + str(self.min_value.value()))
         print("Email is " + str(self.email_address.text()))
 
+        #Resets the form
         self.email_checkbox.setChecked(False)
         self.push_checkbox.setChecked(False)
         self.max_value.clear()
         self.min_value.clear()
         self.email_address.clear()
 
+    #Called once at the very begining to setup table
     def init_prediction_table(self):
         file_exists = os.path.isfile(sentiment_config.PAST_PREDICTIONS_FILE)
         if file_exists:
