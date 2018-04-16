@@ -13,6 +13,7 @@ def process_tweets_from_file(fin, fout):
     valid_count = 0
     invalid_count = 0
     sia = SIA()
+    sia.lexicon.update({u'hodle': 3})
     list_of_tweets = []
     with open(fin) as f:
         for line in f:
@@ -44,9 +45,15 @@ def process_tweets_from_file(fin, fout):
             f.write(tweet+'\n')
 
 def process_tweets_from_main(tweets):
-    valid_count = 0
     invalid_count = 0
     sia = SIA()
+
+    #Dict of kewords used by cryptocurrency enthuasists
+    crypto_slang = {u'bullish': -1.4, u'ath': 3.0, u'ico': 1.0, u'shilling': -2.0, u'fomo': -3.0, u'fudster': -3.2,
+                    u'bagholder': -1.3, u'sharding': 1.1,
+                    u'dapp': 1.5, u'wei': 1.0, u'hodl': 3.5, u'lambo': 4.0, u'mooning': 2.6, u'satoshi': 2.5}
+    sia.lexicon.update(crypto_slang)
+
     list_of_tweets = []
     list_of_spam = [' prize ', 'prize ', ' prize.',
                     ' contest ', 'contest ', ' contest.',
@@ -82,9 +89,6 @@ def process_tweets_from_main(tweets):
                 continue
 
             list_of_tweets.append(j)
-            valid_count += 1
-            if (valid_count % 25000 == 0):
-                print(valid_count)
         except ValueError:
             invalid_count += 1
             if (invalid_count % 100 == 0):

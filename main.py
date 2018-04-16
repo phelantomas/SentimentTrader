@@ -27,14 +27,11 @@ import process_tweets
 import notify
 import sentiment_config
 
-NOTIFY_CONFIG = json.load(open("notify_config.json"))
-formatted_cryptocurrency_tweets = []
-num_of_passes = 0
-NUMBER_OF_MINUTES = 60
-
 class SentimentTraderWindow(QTabWidget):
     def __init__(self, parent=None):
         super(SentimentTraderWindow, self).__init__(parent)
+        self.NOTIFY_CONFIG = json.load(open("notify_config.json"))
+
         if sentiment_config.TYPE == "STOCK":
             stock = Stock(sentiment_config.EXCHANGE)
             self.price  = stock.get_price()
@@ -229,15 +226,14 @@ class SentimentTraderWindow(QTabWidget):
 
     #Updates the notification files
     def handleButton(self):
-        global NOTIFY_CONFIG
-        NOTIFY_CONFIG = {"NOTIFY_CRYPTOCURRENCY_EMAIL": self.email_checkbox.isChecked(),
+        self.NOTIFY_CONFIG = {"NOTIFY_CRYPTOCURRENCY_EMAIL": self.email_checkbox.isChecked(),
                                 "NOTIFY_CRYPTOCURRENCY_PUSH": self.push_checkbox.isChecked(),
                                 "CRYPTOCURRENCY_PRICE_ABOVE": float(self.max_value.value()),
                                 "CRYPTOCURRENCY_PRICE_BELOW": float(self.min_value.value()),
                                 "EMAIL": str(self.email_address.text())}
 
         with open("notify_config.json", "w") as j_file:
-            json.dump(NOTIFY_CONFIG, j_file)
+            json.dump(self.NOTIFY_CONFIG, j_file)
 
         notify.push_notification_details()
 
@@ -426,17 +422,16 @@ class SentimentTraderWindow(QTabWidget):
         self.cryptocurrency_sentiment_label.setText("Current Sentiment : " + str(average_compound))
 
     def notify_user(self, predicted_change, sentiment,cryptocurrency):
-        if NOTIFY_CONFIG["NOTIFY_CRYPTOCURRENCY_PUSH"] is True:
-            if (float(predicted_change) >= NOTIFY_CONFIG['CRYPTOCURRENCY_PRICE_ABOVE'] or float(predicted_change)
-                    <= NOTIFY_CONFIG['CRYPTOCURRENCY_PRICE_BELOW']):
+        if self.NOTIFY_CONFIG["NOTIFY_CRYPTOCURRENCY_PUSH"] is True:
+            if (float(predicted_change) >= self.NOTIFY_CONFIG['CRYPTOCURRENCY_PRICE_ABOVE'] or float(predicted_change)
+                    <= self.NOTIFY_CONFIG['CRYPTOCURRENCY_PRICE_BELOW']):
                 notify.push_notification(predicted_change, sentiment, cryptocurrency)
-        if NOTIFY_CONFIG["NOTIFY_CRYPTOCURRENCY_EMAIL"] is True and sys.platform.startswith("linux"):
-            if (float(predicted_change) >= NOTIFY_CONFIG['CRYPTOCURRENCY_PRICE_ABOVE'] or float(predicted_change)
-                    <= NOTIFY_CONFIG['CRYPTOCURRENCY_PRICE_BELOW']):
-                notify.send_email(predicted_change, sentiment, cryptocurrency, NOTIFY_CONFIG["EMAIL"])
+        if self.NOTIFY_CONFIG["NOTIFY_CRYPTOCURRENCY_EMAIL"] is True and sys.platform.startswith("linux"):
+            if (float(predicted_change) >= self.NOTIFY_CONFIG['CRYPTOCURRENCY_PRICE_ABOVE'] or float(predicted_change)
+                    <= self.NOTIFY_CONFIG['CRYPTOCURRENCY_PRICE_BELOW']):
+                notify.send_email(predicted_change, sentiment, cryptocurrency, self.NOTIFY_CONFIG["EMAIL"])
 
-    def analyse_data(self, filename, coin):
-        global formatted_cryptocurrency_tweets
+    def analyse_data(self, filename, coin, formatted_cryptocurrency_tweets):
         global predict_change
         global current_stock_price
         tweetsInHour = []
@@ -506,41 +501,40 @@ class SentimentTraderWindow(QTabWidget):
 class WorkerThread(QThread):
     def __init__(self, parent=None):
         super(WorkerThread, self).__init__(parent)
+        self.num_of_passes = 0
+        self.formatted_cryptocurrency_tweets = []
 
     def run(self):
-        global formatted_cryptocurrency_tweets
-        global num_of_passes
+        self.num_of_passes += 1
 
-
-        num_of_passes += 1
-
-        print('Pass number : ' + str(num_of_passes))
+        print('Pass number : ' + str(self.num_of_passes))
 
         # cryptocurrency
         cryptocurrencyTweets = collect_tweets.collect_tweets(sentiment_config.NAME)
         cryptocurrencyTweets = process_tweets.process_tweets_from_main(cryptocurrencyTweets)
 
-        tweets_for_table = [x for x in cryptocurrencyTweets if x not in formatted_cryptocurrency_tweets]
-        formatted_cryptocurrency_tweets.extend(cryptocurrencyTweets)
+        tweets_for_table = [x for x in cryptocurrencyTweets if x not in self.formatted_cryptocurrency_tweets]
+        self.formatted_cryptocurrency_tweets.extend(cryptocurrencyTweets)
 
         # remove duplicated tweets
-        formatted_cryptocurrency_tweets = [i for n, i in enumerate(formatted_cryptocurrency_tweets)
-                                                if i not in formatted_cryptocurrency_tweets[n + 1:]]
+        self.formatted_cryptocurrency_tweets = [i for n, i in enumerate(self.formatted_cryptocurrency_tweets)
+                                                if i not in self.formatted_cryptocurrency_tweets[n + 1:]]
 
         #will clear the table every specified minutes
         refresh = False
-        if num_of_passes >= NUMBER_OF_MINUTES:
+        if self.num_of_passes >= sentiment_config.NUMBER_OF_MINUTES:
             refresh = True
         self.emit(SIGNAL("update_tweets_table"), tweets_for_table, refresh)
 
         # average compound sentiment
-        average_compound = float(sum(d['sentiment']['compound'] for d in formatted_cryptocurrency_tweets)) / len(
-            formatted_cryptocurrency_tweets)
+        average_compound = float(sum(d['sentiment']['compound'] for d in self.formatted_cryptocurrency_tweets)) / len(
+            self.formatted_cryptocurrency_tweets)
         self.emit(SIGNAL("update_current_sentiment"), average_compound)
 
-        if num_of_passes >= NUMBER_OF_MINUTES:
-            num_of_passes = 0
-            self.emit(SIGNAL("analyse_data"), sentiment_config.FEATURE_FILE, sentiment_config.NAME)
+        if self.num_of_passes >= sentiment_config.NUMBER_OF_MINUTES:
+            self.num_of_passes = 0
+            self.emit(SIGNAL("analyse_data"), sentiment_config.FEATURE_FILE, sentiment_config.NAME,
+                      self.formatted_cryptocurrency_tweets)
 
 if __name__ == '__main__':
     minute = 60000
