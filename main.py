@@ -25,7 +25,7 @@ import collect_tweets
 import predict
 import process_tweets
 import notify
-import sentiment_config
+from Config_Files import sentiment_config
 
 class SentimentTraderWindow(QTabWidget):
     def __init__(self, parent=None):
@@ -255,9 +255,9 @@ class SentimentTraderWindow(QTabWidget):
 
     #Called once at the very begining to setup table
     def init_prediction_table(self):
-        file_exists = os.path.isfile(sentiment_config.PAST_PREDICTIONS_FILE)
+        file_exists = os.path.isfile("Past_Predictions/"+ sentiment_config.PAST_PREDICTIONS_FILE)
         if file_exists:
-            prediction_data = pd.read_csv(sentiment_config.PAST_PREDICTIONS_FILE)
+            prediction_data = pd.read_csv("Past_Predictions/"+sentiment_config.PAST_PREDICTIONS_FILE)
             for index, row in prediction_data.iterrows():
                 rowPosition = self.cryptocurrency_table_predictions.rowCount()
                 self.cryptocurrency_table_predictions.insertRow(rowPosition)
@@ -299,8 +299,8 @@ class SentimentTraderWindow(QTabWidget):
                            "Tree Prediction": [tree_prediction], "Forest Prediction": [forest_prediction],
                                 "Average Prediction" : [average_prediction], "Actual Price": [actual_price]}
 
-        file_exists = os.path.isfile(sentiment_config.PAST_PREDICTIONS_FILE)
-        pd.DataFrame.from_dict(data=prediction_dict, orient='columns').to_csv(sentiment_config.PAST_PREDICTIONS_FILE, mode='a',
+        file_exists = os.path.isfile("Past_Predictions/"+sentiment_config.PAST_PREDICTIONS_FILE)
+        pd.DataFrame.from_dict(data=prediction_dict, orient='columns').to_csv("Past_Predictions/"+sentiment_config.PAST_PREDICTIONS_FILE, mode='a',
                                                                               header=not file_exists)
         rowPosition = self.cryptocurrency_table_predictions.rowCount()
         self.cryptocurrency_table_predictions.insertRow(rowPosition)
@@ -589,7 +589,7 @@ class WorkerThread(QThread):
 
         if self.num_of_passes >= sentiment_config.NUMBER_OF_MINUTES:
             self.num_of_passes = 0
-            self.emit(SIGNAL("analyse_data"), sentiment_config.FEATURE_FILE, sentiment_config.NAME,
+            self.emit(SIGNAL("analyse_data"), "Features/"+sentiment_config.FEATURE_FILE, sentiment_config.NAME,
                       self.formatted_cryptocurrency_tweets)
 
 if __name__ == '__main__':

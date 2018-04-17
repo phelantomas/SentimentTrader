@@ -5,7 +5,8 @@ Brief: Includes functions for retrieving and storing tweets.
 This is intended to be called every minute.
 '''
 
-import argparse, json, datetime, tweepy, tweepy_config
+import argparse, json, datetime, tweepy
+from Config_Files import tweepy_config
 
 class Tweet:
     def __init__(self, author, text, created_at):
