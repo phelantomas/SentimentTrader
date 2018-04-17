@@ -339,7 +339,7 @@ class SentimentTraderWindow(QTabWidget):
 
     def init_plot(self):
         ax = self.cryptocurrencyFigure.add_subplot(111)
-        ax.set_title(sentiment_config.NAME + ' Price Previous Hours')
+        ax.set_title(sentiment_config.NAME + ' Price Previous ' + str(sentiment_config.NUMBER_OF_MINUTES) + " minutes")
         ax.set_ylabel('Price ($)')
         ax.set_xlabel('Time (h)')
         ax.grid()
@@ -406,7 +406,7 @@ class SentimentTraderWindow(QTabWidget):
         ax.cla()
         ax.remove()
         ax = self.cryptocurrencyFigure.add_subplot(111)
-        ax.set_title(sentiment_config.NAME + ' Price Previous Hours')
+        ax.set_title(sentiment_config.NAME + ' Price Previous ' + str(sentiment_config.NUMBER_OF_MINUTES) + " minutes")
         ax.set_ylabel('Price ($)')
         ax.set_xlabel('Time (h)')
         ax.grid()
