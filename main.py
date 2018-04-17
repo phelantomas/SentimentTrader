@@ -57,6 +57,9 @@ class SentimentTraderWindow(QTabWidget):
 
         #Shows current sentiment
         self.cryptocurrency_sentiment_label = QLabel()
+        #Shows overall accuracy
+        self.cryptocurrency_accuracy_label = QLabel("Overall Accuracy : 0%")
+        self.amountCorrect = 0
 
         self.cryptocurrency_table_tweets = QTableWidget()
         header = ['TimeStamp', 'Tweet', 'Sentiment']
@@ -143,7 +146,7 @@ class SentimentTraderWindow(QTabWidget):
         label_image.setPixmap(logo)
         layout.addWidget(label_image)
 
-        disclaimer_text = "**DISCLAIMER! Trade " + sentiment_config.NAME + " at your own risk. There is no promise of warranty."
+        disclaimer_text = "**DISCLAIMER! Trade " + sentiment_config.NAME + " at your own risk. There is no promise or warranty."
         disclaimer_label = QLabel(disclaimer_text)
 
         instructions_text = "Application may take a few hours before building up adequet training set of an unseen " + sentiment_config.TYPE
@@ -158,6 +161,7 @@ class SentimentTraderWindow(QTabWidget):
     def cryptocurrency_home_UI(self):
         layout = QFormLayout()
         layout.addWidget(self.cryptocurrency_sentiment_label)
+        layout.addWidget(self.cryptocurrency_accuracy_label)
         # this is the Navigation widget
         # it takes the Canvas widget and a parent
         self.cryptocurrency_toolbar = NavigationToolbar(self.cryptocurrencyCanvas, self)
@@ -274,10 +278,19 @@ class SentimentTraderWindow(QTabWidget):
                     accuracy = ((abs(row["Actual Price"] - row["Average Prediction"]) / row["Average Prediction"]) * 100)
                 else: # Exact, so green
                     self.cryptocurrency_table_predictions.item(rowPosition, 7).setBackground(Qt.green)
-                if accuracy < sentiment_config.THRESHOLD_ACCURACY:
+                    self.amountCorrect += 1
+
+                bufferThreshold = sentiment_config.THRESHOLD_ACCURACY * 1.5
+
+                if accuracy <= sentiment_config.THRESHOLD_ACCURACY:
                     self.cryptocurrency_table_predictions.item(rowPosition, 7).setBackground(Qt.green)
+                    self.amountCorrect += 1
+                elif accuracy <= bufferThreshold:
+                    self.cryptocurrency_table_predictions.item(rowPosition, 7).setBackground(Qt.yellow)
                 else:
                     self.cryptocurrency_table_predictions.item(rowPosition, 7).setBackground(Qt.red)
+
+                self.update_accuracy(self.cryptocurrency_table_predictions.rowCount(), self.amountCorrect)
 
     def update_prediction_table(self, time_stamp, linear_prediction, multi_linear_prediction,
                                 tree_prediction, forest_prediction, average_prediction, actual_price):
@@ -309,11 +322,19 @@ class SentimentTraderWindow(QTabWidget):
             accuracy = ((abs(price - predicted) / predicted) * 100.0)
         else:  # Exact, so green
             self.cryptocurrency_table_predictions.item(rowPosition, 7).setBackground(Qt.green)
+            self.amountCorrect += 1
 
-        if accuracy < sentiment_config.THRESHOLD_ACCURACY:
+        bufferThreshold = sentiment_config.THRESHOLD_ACCURACY * 1.5
+
+        if accuracy <= sentiment_config.THRESHOLD_ACCURACY:
             self.cryptocurrency_table_predictions.item(rowPosition, 7).setBackground(Qt.green)
+            self.amountCorrect += 1
+        elif accuracy <= bufferThreshold:
+            self.cryptocurrency_table_predictions.item(rowPosition, 7).setBackground(Qt.yellow)
         else:
             self.cryptocurrency_table_predictions.item(rowPosition, 7).setBackground(Qt.red)
+
+        self.update_accuracy(self.cryptocurrency_table_predictions.rowCount(), self.amountCorrect)
 
 
     def init_plot(self):
@@ -448,6 +469,13 @@ class SentimentTraderWindow(QTabWidget):
 
     def update_current_sentiment(self, average_compound):
         self.cryptocurrency_sentiment_label.setText("Current Sentiment : " + str(average_compound))
+
+    def update_accuracy(self, noOfPredictions, amountRight):
+        if noOfPredictions is 0:
+            percentage = 0
+        else:
+            percentage = 100 * float(amountRight)/float(noOfPredictions)
+        self.cryptocurrency_accuracy_label.setText("Overall Accuracy : " + str(percentage) + "%")
 
     def notify_user(self, predicted_change, sentiment,cryptocurrency):
         if self.NOTIFY_CONFIG["NOTIFY_CRYPTOCURRENCY_PUSH"] is True:
