@@ -4,9 +4,12 @@
 #FEATURE_FILE is where the features get saved
 #PAST_PREDICTIONS_FILE is where past predictions are stored
 #NUMBER_OF_MINUTES how long before doing predictions, default is 60
+#GRAPH_SCALE scale of plotly graph
 TYPE = "CRYPTO"
 NAME = "Bitcoin"
 EXCHANGE = "btc-usd"
 FEATURE_FILE = "Features/btcFeature.csv"
 PAST_PREDICTIONS_FILE = "Past_Predictions/btcPastPredictions.csv"
-NUMBER_OF_MINUTES = 60
+NUMBER_OF_MINUTES = 2
+GRAPH_SCALE = 5
+THRESHOLD_ACCURACY = .1

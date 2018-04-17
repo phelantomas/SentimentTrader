@@ -83,9 +83,9 @@ class SentimentTraderWindow(QTabWidget):
         # Tables for past predictions
         self.cryptocurrency_table_predictions = QTableWidget()
         header = ['TimeStamp', 'Linear Prediction', 'Multi Linear Prediction','Tree Prediction',
-                  'Forest Prediction','Average Prediction', 'Actual Price']
+                  'Forest Prediction','Average Prediction', 'Actual Price', 'Threshold ' + str(sentiment_config.THRESHOLD_ACCURACY) + "%"]
 
-        self.cryptocurrency_table_predictions.setColumnCount(7)
+        self.cryptocurrency_table_predictions.setColumnCount(8)
 
         self.cryptocurrency_table_predictions.setHorizontalHeaderLabels(header)
 
@@ -266,6 +266,19 @@ class SentimentTraderWindow(QTabWidget):
                 self.cryptocurrency_table_predictions.setItem(rowPosition, 5, QTableWidgetItem(str(row['Average Prediction'])))
                 self.cryptocurrency_table_predictions.setItem(rowPosition, 6, QTableWidgetItem(str(row['Actual Price'])))
 
+                #Set Threshold field to red or green, depending on accuracy of prediction
+                self.cryptocurrency_table_predictions.setItem(rowPosition, 7, QTableWidgetItem(""))
+                if row["Actual Price"] > row["Average Prediction"]:
+                    accuracy = ((abs(row["Actual Price"] - row["Average Prediction"]) / row["Actual Price"]) * 100.0)
+                elif row["Actual Price"] < row["Average Prediction"]:
+                    accuracy = ((abs(row["Actual Price"] - row["Average Prediction"]) / row["Average Prediction"]) * 100)
+                else: # Exact, so green
+                    self.cryptocurrency_table_predictions.item(rowPosition, 7).setBackground(Qt.green)
+                if accuracy < sentiment_config.THRESHOLD_ACCURACY:
+                    self.cryptocurrency_table_predictions.item(rowPosition, 7).setBackground(Qt.green)
+                else:
+                    self.cryptocurrency_table_predictions.item(rowPosition, 7).setBackground(Qt.red)
+
     def update_prediction_table(self, time_stamp, linear_prediction, multi_linear_prediction,
                                 tree_prediction, forest_prediction, average_prediction, actual_price):
         time_stamp = datetime.datetime.now().strftime("%y:%m:%d-") + time_stamp
@@ -285,6 +298,22 @@ class SentimentTraderWindow(QTabWidget):
         self.cryptocurrency_table_predictions.setItem(rowPosition, 4, QTableWidgetItem(str(forest_prediction)))
         self.cryptocurrency_table_predictions.setItem(rowPosition, 5, QTableWidgetItem(str(average_prediction)))
         self.cryptocurrency_table_predictions.setItem(rowPosition, 6, QTableWidgetItem(str(actual_price)))
+
+        # Set Threshold field to red or green, depending on accuracy of prediction
+        price = float(actual_price)
+        predicted = float(average_prediction)
+        self.cryptocurrency_table_predictions.setItem(rowPosition, 7, QTableWidgetItem(""))
+        if price > predicted:
+            accuracy = ((abs(price - predicted) / price) * 100.0)
+        elif price < predicted:
+            accuracy = ((abs(price - predicted) / predicted) * 100.0)
+        else:  # Exact, so green
+            self.cryptocurrency_table_predictions.item(rowPosition, 7).setBackground(Qt.green)
+
+        if accuracy < sentiment_config.THRESHOLD_ACCURACY:
+            self.cryptocurrency_table_predictions.item(rowPosition, 7).setBackground(Qt.green)
+        else:
+            self.cryptocurrency_table_predictions.item(rowPosition, 7).setBackground(Qt.red)
 
 
     def init_plot(self):
@@ -344,12 +373,12 @@ class SentimentTraderWindow(QTabWidget):
             predict_xList = self.cryptocurrency_plot_time[:]
         predict_xList.append("Predicted Change")
 
-        linear_y_predict_list_graph = [round(float(i)) for i in linear_y_predict_list_graph]
-        multi_linear_y_predict_list_graph = [round(float(i)) for i in multi_linear_y_predict_list_graph]
-        tree_y_predict_list_graph = [round(float(i)) for i in tree_y_predict_list_graph]
-        forest_y_predict_list_graph = [round(float(i)) for i in forest_y_predict_list_graph]
-        average_y_predict_list_graph = [round(float(i)) for i in average_y_predict_list_graph]
-        current_price_graph = [round(float(i)) for i in current_price_graph]
+        linear_y_predict_list_graph = [round(float(i), 2) for i in linear_y_predict_list_graph]
+        multi_linear_y_predict_list_graph = [round(float(i), 2) for i in multi_linear_y_predict_list_graph]
+        tree_y_predict_list_graph = [round(float(i), 2) for i in tree_y_predict_list_graph]
+        forest_y_predict_list_graph = [round(float(i), 2) for i in forest_y_predict_list_graph]
+        average_y_predict_list_graph = [round(float(i), 2) for i in average_y_predict_list_graph]
+        current_price_graph = [round(float(i), 2) for i in current_price_graph]
 
         ax = self.cryptocurrencyFigure.add_subplot(111)
         ax.clear()
@@ -366,12 +395,12 @@ class SentimentTraderWindow(QTabWidget):
                          min(multi_linear_y_predict_list_graph),
                          min(tree_y_predict_list_graph),
                          min(forest_y_predict_list_graph),
-                         min(current_price_graph)) - 5),
+                         min(current_price_graph)) - sentiment_config.GRAPH_SCALE),
                     (max(max(linear_y_predict_list_graph),
                          max(multi_linear_y_predict_list_graph),
                          max(tree_y_predict_list_graph),
                          max(forest_y_predict_list_graph),
-                         max(current_price_graph)) + 5))
+                         max(current_price_graph)) + sentiment_config.GRAPH_SCALE))
 
         print(current_price_graph)
         print(predict_xList)

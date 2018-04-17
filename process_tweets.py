@@ -1,7 +1,7 @@
 '''
 Author: Tomas Phelan
 License Employed: GNU General Public License v3.0
-Brief:
+Brief: Takes tweets and formats them.
 '''
 
 import argparse, json
@@ -13,7 +13,7 @@ def process_tweets_from_file(fin, fout):
     valid_count = 0
     invalid_count = 0
     sia = SIA()
-    sia.lexicon.update({u'hodle': 3})
+
     list_of_tweets = []
     with open(fin) as f:
         for line in f:
@@ -44,14 +44,17 @@ def process_tweets_from_file(fin, fout):
         for tweet in list_of_tweets:
             f.write(tweet+'\n')
 
-
-def process_tweets_from_main(tweets):
-    CRYPTO_LEXICON = json.load(open("Words/crypto_lexicon.json"))
-    spam_list = json.load(open("Words/spam_phrases.json"))
-    spam_list = format.generate_spam_list(spam_list)
-    invalid_count = 0
+def get_sentiment(formatted_text):
+    CRYPTO_LEXICON = json.load(open("../SentimentTrader/Words/crypto_lexicon.json"))
     sia = SIA()
     sia.lexicon.update(CRYPTO_LEXICON)
+
+    return sia.polarity_scores(formatted_text)
+
+def process_tweets_from_main(tweets):
+    spam_list = json.load(open("../SentimentTrader/Words/spam_phrases.json"))
+    spam_list = format.generate_variations(spam_list)
+    invalid_count = 0
 
     list_of_tweets = []
 
@@ -72,7 +75,7 @@ def process_tweets_from_main(tweets):
             created_at = datetime.strptime(j['created_at'], '%Y-%m-%dT%H:%M:%S')
 
             # sentiment
-            sent = sia.polarity_scores(formatted_text)
+            sent = get_sentiment(formatted_text)
             j['sentiment'] = sent
 
             if j['sentiment']['compound'] == 0:

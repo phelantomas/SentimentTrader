@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 '''
 Author: Tomas Phelan
 License Employed: GNU General Public License v3.0
@@ -11,18 +12,18 @@ import re
 english = set(w.lower() for w in english_words.words())
 stop = set(w.lower() for w in stopwords.words())
 
-def generate_spam_list(spam_list):
-    updated_spam_list = spam_list[:]
-    for phrase in spam_list:
+def generate_variations(list):
+    updated_list = list[:]
+    for phrase in list:
         #add spaces to the begining and end
-        updated_spam_list.append(" " + phrase + " ")
+        updated_list.append(" " + phrase + " ")
         #add sing space in the end
-        updated_spam_list.append(phrase + " ")
+        updated_list.append(phrase + " ")
         #add fullstop
-        updated_spam_list.append(phrase + ".")
+        updated_list.append(phrase + ".")
         #add hashtag
-        updated_spam_list.append("#" + phrase)
-    return updated_spam_list
+        updated_list.append("#" + phrase)
+    return updated_list
 
 def remove_url(text):
     return re.sub(r"http\S+", "", text)
