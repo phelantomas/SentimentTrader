@@ -143,11 +143,10 @@ class SentimentTraderWindow(QTabWidget):
         label_image.setPixmap(logo)
         layout.addWidget(label_image)
 
-        disclaimer_text = "**DISCLAIMER! This application does not promise to be 100% accurate, we are not " \
-                          "responsible for any losses that might occur trading " + sentiment_config.NAME + "."
+        disclaimer_text = "**DISCLAIMER! Trade " + sentiment_config.NAME + " at your own risk. There is no promise of warranty."
         disclaimer_label = QLabel(disclaimer_text)
 
-        instructions_text = "Application may take a few hours before building up adequet training set of an unseen cryptocurrency"
+        instructions_text = "Application may take a few hours before building up adequet training set of an unseen " + sentiment_config.TYPE
         instructions_label = QLabel(instructions_text)
         disclaimer_label.setAlignment(Qt.AlignCenter)
         instructions_label.setAlignment(Qt.AlignCenter)

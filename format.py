@@ -11,17 +11,28 @@ import re
 english = set(w.lower() for w in english_words.words())
 stop = set(w.lower() for w in stopwords.words())
 
+def generate_spam_list(spam_list):
+    updated_spam_list = spam_list[:]
+    for phrase in spam_list:
+        #add spaces to the begining and end
+        updated_spam_list.append(" " + phrase + " ")
+        #add sing space in the end
+        updated_spam_list.append(phrase + " ")
+        #add fullstop
+        updated_spam_list.append(phrase + ".")
+        #add hashtag
+        updated_spam_list.append("#" + phrase)
+    return updated_spam_list
+
 def remove_url(text):
     return re.sub(r"http\S+", "", text)
 
 def remove_excess_whitespace(text):
     return ' '.join(text.split())
-    
-    
+
 def convert_to_lowercase(text):
     return text.lower()
-    
-    
+
 def remove_non_alpha_chars(text):
     T = list(text)
     i = 0
@@ -31,7 +42,6 @@ def remove_non_alpha_chars(text):
         else:
             i += 1
     return ''.join(T)
-    
 
 def remove_non_english_words(text, english):
     T = text.split(' ') # ["hello", "world"]
@@ -68,14 +78,9 @@ def format_semantic(text):
     #b = remove_stopwords(a, stop)
     return a
 
-def format_porter(text):
-    return porter_stemming.stem(text, 0,len(text)-1)
-    
-
 def format_full(text):
     return (format_semantic(format_syntax(text)))
     #return #format_porter(formatted_text)
-
 
 def format_test():
     print(format_full("# ILoveNY bcuz    $ $  money"))

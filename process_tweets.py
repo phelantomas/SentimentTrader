@@ -44,26 +44,16 @@ def process_tweets_from_file(fin, fout):
         for tweet in list_of_tweets:
             f.write(tweet+'\n')
 
+
 def process_tweets_from_main(tweets):
+    CRYPTO_LEXICON = json.load(open("Words/crypto_lexicon.json"))
+    spam_list = json.load(open("Words/spam_phrases.json"))
+    spam_list = format.generate_spam_list(spam_list)
     invalid_count = 0
     sia = SIA()
-
-    #Dict of kewords used by cryptocurrency enthuasists
-    crypto_slang = {u'bullish': -1.4, u'ath': 3.0, u'ico': 1.0, u'shilling': -2.0, u'fomo': -3.0, u'fudster': -3.2,
-                    u'bagholder': -1.3, u'sharding': 1.1,
-                    u'dapp': 1.5, u'wei': 1.0, u'hodl': 3.5, u'lambo': 4.0, u'mooning': 2.6, u'satoshi': 2.5}
-    sia.lexicon.update(crypto_slang)
+    sia.lexicon.update(CRYPTO_LEXICON)
 
     list_of_tweets = []
-    list_of_spam = [' prize ', 'prize ', ' prize.',
-                    ' contest ', 'contest ', ' contest.',
-                    ' giveaway ', 'giveaway ', ' giveaway.',
-                    ' giving away ','giving away ',' giving away.',
-                    ' free ', 'free ', ' free.',
-                    ' limited time only ', 'limited time only ',' limited time only.',
-                    ' discount ', 'discount ', ' discount.',
-                    ' click here ', 'click here ', ' click here.',
-                    ' 4u ', '4u ', ' 4u.']
 
     for line in tweets:
         j = line.__dict__
@@ -72,7 +62,7 @@ def process_tweets_from_main(tweets):
             formatted_text = format.remove_excess_whitespace(j['text'])
 
             #has spam words, do not add
-            if any(word in formatted_text.lower() for word in list_of_spam):
+            if any(word in formatted_text.lower() for word in spam_list):
                 continue
 
             formatted_text = format.remove_url(formatted_text)
