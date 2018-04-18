@@ -482,7 +482,7 @@ class SentimentTraderWindow(QTabWidget):
             if (float(predicted_change) >= self.NOTIFY_CONFIG['CRYPTOCURRENCY_PRICE_ABOVE'] or float(predicted_change)
                     <= self.NOTIFY_CONFIG['CRYPTOCURRENCY_PRICE_BELOW']):
                 notify.push_notification(predicted_change, sentiment, cryptocurrency)
-        if self.NOTIFY_CONFIG["NOTIFY_CRYPTOCURRENCY_EMAIL"] is True and sys.platform.startswith("linux"):
+        if self.NOTIFY_CONFIG["NOTIFY_CRYPTOCURRENCY_EMAIL"] is True:
             if (float(predicted_change) >= self.NOTIFY_CONFIG['CRYPTOCURRENCY_PRICE_ABOVE'] or float(predicted_change)
                     <= self.NOTIFY_CONFIG['CRYPTOCURRENCY_PRICE_BELOW']):
                 notify.send_email(predicted_change, sentiment, cryptocurrency, self.NOTIFY_CONFIG["EMAIL"])
