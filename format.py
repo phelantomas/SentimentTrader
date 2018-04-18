@@ -13,7 +13,7 @@ english = set(w.lower() for w in english_words.words())
 stop = set(w.lower() for w in stopwords.words())
 
 def generate_variations(list):
-    updated_list = list[:]
+    updated_list = []
     for phrase in list:
         #add spaces to the begining and end
         updated_list.append(" " + phrase + " ")
