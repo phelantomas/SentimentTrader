@@ -34,11 +34,20 @@ def push_notification(predicted_change, sentiment, coin):
         osascript -e 'display notification"{}" with title "{}" subtitle "{}"'
                 """.format("Sentiment : " + sentiment,coin, "Predicted Change :" + predicted_change))
 
-def push_notification_details():
-    if sys.platform.startswith("linux"):
-        message = "Your details have been updated."
-        s.call(['notify-send', message])
-    else: #Mac
-        os.system("""
-                    osascript -e 'display notification"{}" with title "{}"'
-        """.format("Your details have been updated.", "Successful"))
+def push_notification_details(flag):
+    if flag:
+        if sys.platform.startswith("linux"):
+            message = "Your details have been updated."
+            s.call(['notify-send', message])
+        else: #Mac
+            os.system("""
+                        osascript -e 'display notification"{}" with title "{}"'
+            """.format("Your details have been updated.", "Successful"))
+    else:
+        if sys.platform.startswith("linux"):
+            message = "Your details have not been updated. Enter an email."
+            s.call(['notify-send', message])
+        else: #Mac
+            os.system("""
+                        osascript -e 'display notification"{}" with title "{}"'
+            """.format("Your details have not been updated. Enter an email.", "Unsuccessful"))

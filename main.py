@@ -229,29 +229,33 @@ class SentimentTraderWindow(QTabWidget):
 
     #Updates the notification files
     def handleButton(self):
-        self.NOTIFY_CONFIG = {"NOTIFY_CRYPTOCURRENCY_EMAIL": self.email_checkbox.isChecked(),
-                                "NOTIFY_CRYPTOCURRENCY_PUSH": self.push_checkbox.isChecked(),
-                                "CRYPTOCURRENCY_PRICE_ABOVE": float(self.max_value.value()),
-                                "CRYPTOCURRENCY_PRICE_BELOW": float(self.min_value.value()),
-                                "EMAIL": str(self.email_address.text())}
+        if self.email_checkbox.isChecked() and len(self.email_address.text()) > 0:
+            self.NOTIFY_CONFIG = {"NOTIFY_CRYPTOCURRENCY_EMAIL": self.email_checkbox.isChecked(),
+                                    "NOTIFY_CRYPTOCURRENCY_PUSH": self.push_checkbox.isChecked(),
+                                    "CRYPTOCURRENCY_PRICE_ABOVE": float(self.max_value.value()),
+                                    "CRYPTOCURRENCY_PRICE_BELOW": float(self.min_value.value()),
+                                    "EMAIL": str(self.email_address.text())}
 
-        with open("Config_Files/notify_config.json", "w") as j_file:
-            json.dump(self.NOTIFY_CONFIG, j_file)
+            with open("Config_Files/notify_config.json", "w") as j_file:
+                json.dump(self.NOTIFY_CONFIG, j_file)
 
-        notify.push_notification_details()
+            notify.push_notification_details(True)
 
-        print("Is email checked" + str(self.email_checkbox.isChecked()))
-        print("Is push checked" + str(self.push_checkbox.isChecked()))
-        print("Max Value " + str(self.max_value.value()))
-        print("Min Value " + str(self.min_value.value()))
-        print("Email is " + str(self.email_address.text()))
+            print("Is email checked" + str(self.email_checkbox.isChecked()))
+            print("Is push checked" + str(self.push_checkbox.isChecked()))
+            print("Max Value " + str(self.max_value.value()))
+            print("Min Value " + str(self.min_value.value()))
+            print("Email is " + str(self.email_address.text()))
 
-        #Resets the form
-        self.email_checkbox.setChecked(False)
-        self.push_checkbox.setChecked(False)
-        self.max_value.clear()
-        self.min_value.clear()
-        self.email_address.clear()
+            #Resets the form
+            self.email_checkbox.setChecked(False)
+            self.push_checkbox.setChecked(False)
+            self.max_value.clear()
+            self.min_value.clear()
+            self.email_address.clear()
+        else:
+            notify.push_notification_details(False)
+
 
     #Called once at the very begining to setup table
     def init_prediction_table(self):
