@@ -30,7 +30,7 @@ from Config_Files import sentiment_config
 class SentimentTraderWindow(QTabWidget):
     def __init__(self, parent=None):
         super(SentimentTraderWindow, self).__init__(parent)
-        self.NOTIFY_CONFIG = json.load(open("notify_config.json"))
+        self.NOTIFY_CONFIG = json.load(open("Config_Files/notify_config.json"))
 
         if sentiment_config.TYPE == "STOCK":
             stock = Stock(sentiment_config.EXCHANGE)
@@ -235,7 +235,7 @@ class SentimentTraderWindow(QTabWidget):
                                 "CRYPTOCURRENCY_PRICE_BELOW": float(self.min_value.value()),
                                 "EMAIL": str(self.email_address.text())}
 
-        with open("notify_config.json", "w") as j_file:
+        with open("Config_Files/notify_config.json", "w") as j_file:
             json.dump(self.NOTIFY_CONFIG, j_file)
 
         notify.push_notification_details()
