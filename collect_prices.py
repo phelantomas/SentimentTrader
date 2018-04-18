@@ -12,8 +12,6 @@ def get_price_info(type):
     try:
         url = 'https://api.cryptonator.com/api/ticker/{}'.format(type)
         response = requests.get(url)
-        filename = type + "_prices.txt"
-        write_price_to_file(response, filename)
         return response.text
     except:
         return None
@@ -32,7 +30,6 @@ def write_price_to_file(price, fname):
   
 def collect_price():
     p = get_price_info()
-    write_price_to_file(p, 'prices.txt')
 
 if __name__ == "__main__":
     p = get_price_info()
