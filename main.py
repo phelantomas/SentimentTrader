@@ -102,11 +102,20 @@ class SentimentTraderWindow(QTabWidget):
             self.cryptocurrency_table_predictions.horizontalHeader().setResizeMode(QHeaderView.Stretch)
             self.cryptocurrencyFigure = Figure(figsize=(40,5))
 
+        #Colours
+        self.light_green = '#dbffbc'
+        grey = '#f2f2f2'
+        self.cryptocurrencyFigure.patch.set_facecolor(grey)
+
+
         # this is the Canvas Widget that displays the `figure`
         # it takes the `figure` instance as a parameter to __init__
         self.cryptocurrencyCanvas = FigureCanvas(self.cryptocurrencyFigure)
 
         self.cryptocurrency_ax = self.cryptocurrencyFigure.add_subplot(111)
+
+        self.cryptocurrency_ax.set_facecolor(self.light_green)
+
 
         #plotting cryptocurrency prices
         self.cryptocurrency_xlist = []
@@ -229,7 +238,7 @@ class SentimentTraderWindow(QTabWidget):
 
     #Updates the notification files
     def handleButton(self):
-        if self.email_checkbox.isChecked() and len(self.email_address.text()) > 0:
+        if self.email_checkbox.isChecked() and len(self.email_address.text()) > 0 and '@' in str(self.email_address.text()):
             self.NOTIFY_CONFIG = {"NOTIFY_CRYPTOCURRENCY_EMAIL": self.email_checkbox.isChecked(),
                                     "NOTIFY_CRYPTOCURRENCY_PUSH": self.push_checkbox.isChecked(),
                                     "CRYPTOCURRENCY_PRICE_ABOVE": float(self.max_value.value()),
@@ -410,6 +419,7 @@ class SentimentTraderWindow(QTabWidget):
         ax.cla()
         ax.remove()
         ax = self.cryptocurrencyFigure.add_subplot(111)
+        ax.set_facecolor(self.light_green)
         ax.set_title(sentiment_config.NAME + ' Price Previous ' + str(sentiment_config.NUMBER_OF_MINUTES) + " minutes")
         ax.set_ylabel('Price ($)')
         ax.set_xlabel('Time (h)')
@@ -494,15 +504,15 @@ class SentimentTraderWindow(QTabWidget):
     def analyse_data(self, filename, coin, formatted_cryptocurrency_tweets):
         global predict_change
         global current_stock_price
-        tweetsInHour = []
+        tweetsInHour = formatted_cryptocurrency_tweets[:]
 
         #Gets rid of tweets older than an hour
-        tweets_from_one_hour = datetime.datetime.now() - datetime.timedelta(hours=2)#2 hours now due to time saving
+        #tweets_from_one_hour = datetime.datetime.now() - datetime.timedelta(hours=2)#2 hours now due to time saving
 
-        for tweet in formatted_cryptocurrency_tweets:
-            created_at = datetime.datetime.strptime(tweet['created_at'], '%Y-%m-%dT%H:%M:%S')
-            if created_at > tweets_from_one_hour:
-                tweetsInHour.append(tweet)
+        #for tweet in formatted_cryptocurrency_tweets:
+         #   created_at = datetime.datetime.strptime(tweet['created_at'], '%Y-%m-%dT%H:%M:%S')
+          #  if created_at > tweets_from_one_hour:
+           #     tweetsInHour.append(tweet)
         formatted_cryptocurrency_tweets = []
 
         print("Number of unique tweets in an hour for " + coin + " is " + str(len(tweetsInHour)))
