@@ -50,5 +50,4 @@ Once done, just run the main.py file, and it will now be running for your select
 You can download pre-made data sets for Bitcoin, Litecoin, and Ethereum [here](https://drive.google.com/drive/folders/1HNm2PQ5S0rT9aoI6KvhhNoTgQoOcyU9T). Once downloaded, place into the Features folder.
 
 ### References
-[1] Colianni, Rosales, Signorotti. *Algorithmic Trading of Cryptocurrency Based on Twitter Sentiment Analysis* http://cs229.stanford.edu/proj2015/029_report.pdf.  
-[2] Website with links to all documentation [here](http://glasnost.itcarlow.ie/~softeng4/C00192548/index.html).
+[1] Website with links to all documentation [here](http://glasnost.itcarlow.ie/~softeng4/C00192548/index.html).
