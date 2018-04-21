@@ -9,7 +9,7 @@ class FormatTestCase(unittest.TestCase):
         spam_list = ['spam', 'ham']
         expected_result = [' spam ', 'spam ', 'spam.',
                            '#spam', ' ham ', 'ham ', 'ham.', '#ham']
-        actual_result = format.generate_spam_list(spam_list)
+        actual_result = format.generate_variations(spam_list)
         self.assertEqual(expected_result, actual_result)
 
     def test_remove_url(self):
