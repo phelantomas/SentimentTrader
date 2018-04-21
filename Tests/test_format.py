@@ -5,9 +5,9 @@ from nltk.corpus import words as english_words
 
 class FormatTestCase(unittest.TestCase):
 
-    def test_generate_spam_list(self):
+    def test_generate_variations(self):
         spam_list = ['spam', 'ham']
-        expected_result = ['spam', 'ham',' spam ', 'spam ', 'spam.',
+        expected_result = [' spam ', 'spam ', 'spam.',
                            '#spam', ' ham ', 'ham ', 'ham.', '#ham']
         actual_result = format.generate_spam_list(spam_list)
         self.assertEqual(expected_result, actual_result)
