@@ -504,15 +504,15 @@ class SentimentTraderWindow(QTabWidget):
     def analyse_data(self, filename, coin, formatted_cryptocurrency_tweets):
         global predict_change
         global current_stock_price
-        tweetsInHour = formatted_cryptocurrency_tweets[:]
+        tweetsInHour = []
 
         #Gets rid of tweets older than an hour
-        #tweets_from_one_hour = datetime.datetime.now() - datetime.timedelta(hours=2)#2 hours now due to time saving
+        tweets_from_one_hour = datetime.datetime.now() - datetime.timedelta(hours=2)#2 hours now due to time saving
 
-        #for tweet in formatted_cryptocurrency_tweets:
-         #   created_at = datetime.datetime.strptime(tweet['created_at'], '%Y-%m-%dT%H:%M:%S')
-          #  if created_at > tweets_from_one_hour:
-           #     tweetsInHour.append(tweet)
+        for tweet in formatted_cryptocurrency_tweets:
+            created_at = datetime.datetime.strptime(tweet['created_at'], '%Y-%m-%dT%H:%M:%S')
+            if created_at > tweets_from_one_hour:
+                tweetsInHour.append(tweet)
         formatted_cryptocurrency_tweets = []
 
         print("Number of unique tweets in an hour for " + coin + " is " + str(len(tweetsInHour)))
