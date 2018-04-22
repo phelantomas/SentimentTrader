@@ -238,7 +238,7 @@ class SentimentTraderWindow(QTabWidget):
 
     #Updates the notification files
     def handleButton(self):
-        if self.email_checkbox.isChecked() and len(self.email_address.text()) > 0 and '@' in str(self.email_address.text()):
+        if (self.email_checkbox.isChecked() and len(self.email_address.text()) > 0 and '@' in str(self.email_address.text())) or not self.email_checkbox.isChecked():
             self.NOTIFY_CONFIG = {"NOTIFY_CRYPTOCURRENCY_EMAIL": self.email_checkbox.isChecked(),
                                     "NOTIFY_CRYPTOCURRENCY_PUSH": self.push_checkbox.isChecked(),
                                     "CRYPTOCURRENCY_PRICE_ABOVE": float(self.max_value.value()),
