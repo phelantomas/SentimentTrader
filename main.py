@@ -56,31 +56,54 @@ class SentimentTraderWindow(QTabWidget):
         self.addTab(self.notification_home, "Notification")
 
         #Shows current sentiment
-        self.cryptocurrency_sentiment_label = QLabel()
+        self.cryptocurrency_sentiment_label = QLabel("Current Sentiment : 0")
         #Shows overall accuracy
         self.cryptocurrency_accuracy_label = QLabel("Overall Accuracy : 0%")
         self.amountCorrect = 0
 
-        self.cryptocurrency_table_tweets = QTableWidget()
-        header = ['TimeStamp', 'Tweet', 'Sentiment']
+        self.cryptocurrency_table_positive_tweets = QTableWidget()
+        positive_header = ['TimeStamp', 'Positive Tweets', 'Sentiment']
 
-        self.cryptocurrency_table_tweets.setColumnCount(3)
+        self.cryptocurrency_table_positive_tweets.setColumnCount(3)
+
+        self.cryptocurrency_table_negative_tweets = QTableWidget()
+        negative_header = ['TimeStamp', 'Negative Tweets', 'Sentiment']
+
+        self.cryptocurrency_table_negative_tweets.setColumnCount(3)
 
         #Scales for system
         if sys.platform.startswith("linux"):
-            self.cryptocurrency_table_tweets.setColumnWidth(0, 170)
-            self.cryptocurrency_table_tweets.setColumnWidth(1, 800)
+            #Positive
+            self.cryptocurrency_table_positive_tweets.setColumnWidth(0, 170)
+            self.cryptocurrency_table_positive_tweets.setColumnWidth(1, 800)
 
-            self.cryptocurrency_table_tweets.setHorizontalHeaderLabels(header)
-            self.cryptocurrency_table_tweets.horizontalHeader().setResizeMode(1, QHeaderView.Stretch)
+            self.cryptocurrency_table_positive_tweets.setHorizontalHeaderLabels(positive_header)
+            self.cryptocurrency_table_positive_tweets.horizontalHeader().setResizeMode(1, QHeaderView.Stretch)
+
+            #Negative
+            self.cryptocurrency_table_negative_tweets.setColumnWidth(0, 170)
+            self.cryptocurrency_table_negative_tweets.setColumnWidth(1, 800)
+
+            self.cryptocurrency_table_negative_tweets.setHorizontalHeaderLabels(negative_header)
+            self.cryptocurrency_table_negative_tweets.horizontalHeader().setResizeMode(1, QHeaderView.Stretch)
         else:
-            self.cryptocurrency_table_tweets.setColumnWidth(0, 160)
-            self.cryptocurrency_table_tweets.setColumnWidth(1, 917)
-            self.cryptocurrency_table_tweets.setColumnWidth(2, 80)
-            self.cryptocurrency_table_tweets.setMinimumWidth(1195)
+            #Positive
+            self.cryptocurrency_table_positive_tweets.setColumnWidth(0, 160)
+            self.cryptocurrency_table_positive_tweets.setColumnWidth(1, 917)
+            self.cryptocurrency_table_positive_tweets.setColumnWidth(2, 80)
+            self.cryptocurrency_table_positive_tweets.setMinimumWidth(1195)
 
-            self.cryptocurrency_table_tweets.setHorizontalHeaderLabels(header)
-        self.cryptocurrency_table_tweets.setFixedHeight(655)
+            self.cryptocurrency_table_positive_tweets.setHorizontalHeaderLabels(positive_header)
+
+            #Negative
+            self.cryptocurrency_table_negative_tweets.setColumnWidth(0, 160)
+            self.cryptocurrency_table_negative_tweets.setColumnWidth(1, 917)
+            self.cryptocurrency_table_negative_tweets.setColumnWidth(2, 80)
+            self.cryptocurrency_table_negative_tweets.setMinimumWidth(1195)
+
+            self.cryptocurrency_table_negative_tweets.setHorizontalHeaderLabels(negative_header)
+        self.cryptocurrency_table_positive_tweets.setFixedHeight(325)
+        self.cryptocurrency_table_negative_tweets.setFixedHeight(325)
 
 
         # Tables for past predictions
@@ -184,7 +207,8 @@ class SentimentTraderWindow(QTabWidget):
 
     def tweets_home_UI(self):
         layout = QFormLayout()
-        layout.addWidget(self.cryptocurrency_table_tweets)
+        layout.addWidget(self.cryptocurrency_table_positive_tweets)
+        layout.addWidget(self.cryptocurrency_table_negative_tweets)
         self.setTabText(2, "Tweets")
         self.tweets_home.setLayout(layout)
 
@@ -458,15 +482,28 @@ class SentimentTraderWindow(QTabWidget):
         print(len(tweets))
         # do at end
         if refresh: #Clears table every hour.
-            for i in reversed(range(self.cryptocurrency_table_tweets.rowCount())):
-                self.cryptocurrency_table_tweets.removeRow(i)
+            for i in reversed(range(self.cryptocurrency_table_positive_tweets.rowCount())):
+                self.cryptocurrency_table_positive_tweets.removeRow(i)
+            for i in reversed(range(self.cryptocurrency_table_negative_tweets.rowCount())):
+                self.cryptocurrency_table_negative_tweets.removeRow(i)
+
         for tweet in tweets:
-            rowPosition = self.cryptocurrency_table_tweets.rowCount()
-            self.cryptocurrency_table_tweets.insertRow(rowPosition)
-            self.cryptocurrency_table_tweets.setItem(rowPosition, 0, QTableWidgetItem(str(tweet['created_at'])))
-            self.cryptocurrency_table_tweets.setItem(rowPosition, 1, QTableWidgetItem(
-                str(tweet['formatted_text'].encode('utf8'))))
-            self.cryptocurrency_table_tweets.setItem(rowPosition, 2, QTableWidgetItem(str(tweet['sentiment']['compound'])))
+            if tweet['sentiment']['compound'] > 0:
+                rowPosition = self.cryptocurrency_table_positive_tweets.rowCount()
+                self.cryptocurrency_table_positive_tweets.insertRow(rowPosition)
+                self.cryptocurrency_table_positive_tweets.setItem(rowPosition, 0, QTableWidgetItem(str(tweet['created_at'])))
+                self.cryptocurrency_table_positive_tweets.setItem(rowPosition, 1, QTableWidgetItem(
+                    str(tweet['formatted_text'].encode('utf8'))))
+                self.cryptocurrency_table_positive_tweets.setItem(rowPosition, 2, QTableWidgetItem(str(tweet['sentiment']['compound'])))
+            else:
+                rowPosition = self.cryptocurrency_table_negative_tweets.rowCount()
+                self.cryptocurrency_table_negative_tweets.insertRow(rowPosition)
+                self.cryptocurrency_table_negative_tweets.setItem(rowPosition, 0,
+                                                                  QTableWidgetItem(str(tweet['created_at'])))
+                self.cryptocurrency_table_negative_tweets.setItem(rowPosition, 1, QTableWidgetItem(
+                    str(tweet['formatted_text'].encode('utf8'))))
+                self.cryptocurrency_table_negative_tweets.setItem(rowPosition, 2,
+                                                                  QTableWidgetItem(str(tweet['sentiment']['compound'])))
 
     def get_current_price(self):
         timeout = 1
