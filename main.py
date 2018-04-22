@@ -27,6 +27,11 @@ import process_tweets
 import notify
 from Config_Files import sentiment_config
 
+#Talk across threads
+price_retrieved = False
+get_price = False
+j_info = None
+
 class SentimentTraderWindow(QTabWidget):
     def __init__(self, parent=None):
         super(SentimentTraderWindow, self).__init__(parent)
@@ -41,7 +46,8 @@ class SentimentTraderWindow(QTabWidget):
         self.connect(self.workerThread, QtCore.SIGNAL("update_tweets_table"), self.update_tweets_table)
         self.connect(self.workerThread, QtCore.SIGNAL("analyse_data"), self.analyse_data)
         self.connect(self.workerThread, QtCore.SIGNAL("update_current_sentiment"), self.update_current_sentiment)
-        self.connect(self.workerThread, QtCore.SIGNAL("get_current_price"), self.get_current_price)
+
+        self.priceThread = PriceThread()
 
         self.home = QWidget()
         self.cryptocurrency_home = QScrollArea()
@@ -476,6 +482,7 @@ class SentimentTraderWindow(QTabWidget):
         self.cryptocurrencyCanvas.draw_idle()
 
     def process_data(self):
+        self.priceThread.start()
         self.workerThread.start()
 
     def update_tweets_table(self, tweets, refresh):
@@ -505,19 +512,6 @@ class SentimentTraderWindow(QTabWidget):
                 self.cryptocurrency_table_negative_tweets.setItem(rowPosition, 2,
                                                                   QTableWidgetItem(str(tweet['sentiment']['compound'])))
 
-    def get_current_price(self):
-        timeout = 1
-        str_error = "No Price Yet"
-        while str_error:
-            try:
-                price_info = collect_prices.get_price_info(sentiment_config.EXCHANGE)
-                j_info = json.loads(price_info)
-                str_error = None
-            except Exception as str_error:
-                print(str_error)
-                time.sleep(timeout)
-        return j_info
-
     def update_current_sentiment(self, average_compound):
         self.cryptocurrency_sentiment_label.setText("Current Sentiment : " + str(average_compound))
 
@@ -541,6 +535,7 @@ class SentimentTraderWindow(QTabWidget):
     def analyse_data(self, filename, coin, formatted_cryptocurrency_tweets):
         global predict_change
         global current_stock_price
+        global j_info
         tweetsInHour = []
 
         #Gets rid of tweets older than an hour
@@ -556,8 +551,6 @@ class SentimentTraderWindow(QTabWidget):
 
         file_exists = os.path.isfile(filename)
         if sentiment_config.TYPE == "CRYPTO":
-            j_info = self.get_current_price()
-
             change = j_info['ticker']['change']
             volume = j_info['ticker']['volume']
             self.price = j_info['ticker']['price']
@@ -612,6 +605,7 @@ class WorkerThread(QThread):
         self.formatted_cryptocurrency_tweets = []
 
     def run(self):
+        global price_retrieved
         self.num_of_passes += 1
 
         print('Pass number : ' + str(self.num_of_passes))
@@ -639,9 +633,37 @@ class WorkerThread(QThread):
         self.emit(SIGNAL("update_current_sentiment"), average_compound)
 
         if self.num_of_passes >= sentiment_config.NUMBER_OF_MINUTES:
+            #Mutex
+            while price_retrieved is not True:
+                print("Waiting")
+                continue
+            price_retrieved = False
             self.num_of_passes = 0
             self.emit(SIGNAL("analyse_data"), "Features/"+sentiment_config.FEATURE_FILE, sentiment_config.NAME,
                       self.formatted_cryptocurrency_tweets)
+
+class PriceThread(QThread):
+    def __init__(self, parent=None):
+        super(PriceThread, self).__init__(parent)
+
+    def run(self):
+        global price_retrieved
+        #Mutex
+        price_retrieved = False
+        global j_info
+        timeout = 1
+        str_error = "No Price Yet"
+        while str_error:
+            try:
+                price_info = collect_prices.get_price_info(sentiment_config.EXCHANGE)
+                j_info = json.loads(price_info)
+                str_error = None
+                price_retrieved = True
+            except Exception as str_error:
+                print(str_error)
+                time.sleep(timeout)
+                timeout += 1
+        print("Price got")
 
 if __name__ == '__main__':
     minute = 60000
