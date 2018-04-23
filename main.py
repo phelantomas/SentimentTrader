@@ -425,7 +425,10 @@ class SentimentTraderWindow(QTabWidget):
             forest_y_predict_list_graph = self.cryptocurrency_forest_y_predict_list
             average_y_predict_list_graph = self.cryptocurrency_average_y_predict_list
             predict_xList = self.cryptocurrency_plot_time[:]
-        predict_xList.append("Predicted Change")
+        future_date = datetime.datetime.strptime(self.cryptocurrency_plot_time[-1], '%H:%M:%S') + datetime.timedelta(
+            minutes=sentiment_config.NUMBER_OF_MINUTES)
+        future_time = "Predicted Change \n" + str(future_date.time())
+        predict_xList.append(future_time)
 
         linear_y_predict_list_graph = [round(float(i), 2) for i in linear_y_predict_list_graph]
         multi_linear_y_predict_list_graph = [round(float(i), 2) for i in multi_linear_y_predict_list_graph]
@@ -524,16 +527,8 @@ class SentimentTraderWindow(QTabWidget):
     def analyse_data(self, filename, coin, formatted_cryptocurrency_tweets, j_info):
         tweetsInHour = []
 
-        #Gets rid of tweets older than an hour
-        tweets_from_one_hour = datetime.datetime.now() - datetime.timedelta(hours=2)#2 hours now due to time saving
 
-        for tweet in formatted_cryptocurrency_tweets:
-            created_at = datetime.datetime.strptime(tweet['created_at'], '%Y-%m-%dT%H:%M:%S')
-            if created_at > tweets_from_one_hour:
-                tweetsInHour.append(tweet)
-        formatted_cryptocurrency_tweets = []
-
-        print("Number of unique tweets in an hour for " + coin + " is " + str(len(tweetsInHour)))
+        print("Number of unique tweets in an hour for " + coin + " is " + str(len(formatted_cryptocurrency_tweets)))
 
         file_exists = os.path.isfile(filename)
         if sentiment_config.TYPE == "CRYPTO":
@@ -549,12 +544,13 @@ class SentimentTraderWindow(QTabWidget):
             timestamp = datetime.datetime.now().strftime("%H:%M:%S")
         try:
             # average compound
-            average_compound = float(sum(d['sentiment']['compound'] for d in tweetsInHour)) / len(
-                tweetsInHour)
+            average_compound = float(sum(d['sentiment']['compound'] for d in formatted_cryptocurrency_tweets)) / len(
+                formatted_cryptocurrency_tweets)
 
             cryptoFeature = {'TimeStamp': [timestamp], 'Sentiment': [average_compound], 'Volume': [volume],
-                             'Change': [change], 'Price': [self.price], 'NoOfTweets': [len(tweetsInHour)]}
+                             'Change': [change], 'Price': [self.price], 'NoOfTweets': [len(formatted_cryptocurrency_tweets)]}
 
+            formatted_cryptocurrency_tweets = []
             pd.DataFrame.from_dict(data=cryptoFeature, orient='columns').to_csv(filename, mode='a',
                                                                                 header=not file_exists)
             # Make Predictions
@@ -581,8 +577,8 @@ class SentimentTraderWindow(QTabWidget):
                 self.plot(linear_predict_change, multi_linear_predict_change, tree_predict_change, forest_predict_change)
             else:
                 print("Still building set")
-        except:
-            print("No tweets in the last hour")
+        except Exception as e:
+            print("No tweets in the last hour", str(e))
 
 class WorkerThread(QThread):
     def __init__(self, parent=None):
