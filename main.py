@@ -87,7 +87,7 @@ class SentimentTraderWindow(QTabWidget):
         else:
             #Positive
             self.cryptocurrency_table_positive_tweets.setColumnWidth(0, 160)
-            self.cryptocurrency_table_positive_tweets.setColumnWidth(1, 917)
+            self.cryptocurrency_table_positive_tweets.setColumnWidth(1, 955)
             self.cryptocurrency_table_positive_tweets.setColumnWidth(2, 80)
             self.cryptocurrency_table_positive_tweets.setMinimumWidth(1195)
 
@@ -95,7 +95,7 @@ class SentimentTraderWindow(QTabWidget):
 
             #Negative
             self.cryptocurrency_table_negative_tweets.setColumnWidth(0, 160)
-            self.cryptocurrency_table_negative_tweets.setColumnWidth(1, 917)
+            self.cryptocurrency_table_negative_tweets.setColumnWidth(1, 955)
             self.cryptocurrency_table_negative_tweets.setColumnWidth(2, 80)
             self.cryptocurrency_table_negative_tweets.setMinimumWidth(1195)
 
@@ -121,7 +121,7 @@ class SentimentTraderWindow(QTabWidget):
         else:
             self.cryptocurrency_table_predictions.setMinimumWidth(1200)
             self.cryptocurrency_table_predictions.horizontalHeader().setResizeMode(QHeaderView.Stretch)
-            self.cryptocurrencyFigure = Figure(figsize=(40,5))
+            self.cryptocurrencyFigure = Figure(figsize=(40, 5))
 
         #Colours
         self.light_green = '#dbffbc'
