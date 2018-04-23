@@ -1,9 +1,9 @@
+#!/usr/bin/env python -W ignore::DeprecationWarning
 '''
 Author: Tomas Phelan
 License Employed: GNU General Public License v3.0
 Brief: Contains the code for the GUI, and the main functionality.
 '''
-
 import datetime
 import os.path
 import sys
@@ -27,11 +27,6 @@ import process_tweets
 import notify
 from Config_Files import sentiment_config
 
-#Talk across threads
-price_retrieved = False
-get_price = False
-j_info = None
-
 class SentimentTraderWindow(QTabWidget):
     def __init__(self, parent=None):
         super(SentimentTraderWindow, self).__init__(parent)
@@ -46,8 +41,6 @@ class SentimentTraderWindow(QTabWidget):
         self.connect(self.workerThread, QtCore.SIGNAL("update_tweets_table"), self.update_tweets_table)
         self.connect(self.workerThread, QtCore.SIGNAL("analyse_data"), self.analyse_data)
         self.connect(self.workerThread, QtCore.SIGNAL("update_current_sentiment"), self.update_current_sentiment)
-
-        self.priceThread = PriceThread()
 
         self.home = QWidget()
         self.cryptocurrency_home = QScrollArea()
@@ -482,7 +475,6 @@ class SentimentTraderWindow(QTabWidget):
         self.cryptocurrencyCanvas.draw_idle()
 
     def process_data(self):
-        self.priceThread.start()
         self.workerThread.start()
 
     def update_tweets_table(self, tweets, refresh):
@@ -522,20 +514,17 @@ class SentimentTraderWindow(QTabWidget):
             percentage = 100 * float(amountRight)/float(noOfPredictions)
         self.cryptocurrency_accuracy_label.setText("Overall Accuracy : " + str(percentage) + "%")
 
-    def notify_user(self, predicted_change, sentiment,cryptocurrency):
+    def notify_user(self, predicted_change, sentiment):
         if self.NOTIFY_CONFIG["NOTIFY_CRYPTOCURRENCY_PUSH"] is True:
             if (float(predicted_change) >= self.NOTIFY_CONFIG['CRYPTOCURRENCY_PRICE_ABOVE'] or float(predicted_change)
                     <= self.NOTIFY_CONFIG['CRYPTOCURRENCY_PRICE_BELOW']):
-                notify.push_notification(predicted_change, sentiment, cryptocurrency)
+                notify.push_notification(predicted_change, sentiment, sentiment_config.NAME)
         if self.NOTIFY_CONFIG["NOTIFY_CRYPTOCURRENCY_EMAIL"] is True:
             if (float(predicted_change) >= self.NOTIFY_CONFIG['CRYPTOCURRENCY_PRICE_ABOVE'] or float(predicted_change)
                     <= self.NOTIFY_CONFIG['CRYPTOCURRENCY_PRICE_BELOW']):
-                notify.send_email(predicted_change, sentiment, cryptocurrency, self.NOTIFY_CONFIG["EMAIL"])
+                notify.send_email(predicted_change, sentiment, sentiment_config.NAME, self.NOTIFY_CONFIG["EMAIL"])
 
-    def analyse_data(self, filename, coin, formatted_cryptocurrency_tweets):
-        global predict_change
-        global current_stock_price
-        global j_info
+    def analyse_data(self, filename, coin, formatted_cryptocurrency_tweets, j_info):
         tweetsInHour = []
 
         #Gets rid of tweets older than an hour
@@ -583,7 +572,7 @@ class SentimentTraderWindow(QTabWidget):
                 average_prediction = (float(linear_predict_change) + float(multi_linear_predict_change)
                                       + float(tree_predict_change) + float(forest_predict_change))/4
                 self.notify_user(str(average_prediction), str(
-                    cryptoFeature['Sentiment'][0]), coin)
+                    cryptoFeature['Sentiment'][0]))
 
                 #Plotting
                 self.cryptocurrency_current_price.append(self.price)
@@ -604,11 +593,32 @@ class WorkerThread(QThread):
         self.num_of_passes = 0
         self.formatted_cryptocurrency_tweets = []
 
-    def run(self):
-        global price_retrieved
-        self.num_of_passes += 1
+    def notify_user(self, predicted_change, sentiment, Notify_Config):
+        if Notify_Config["NOTIFY_CRYPTOCURRENCY_PUSH"] is True:
+            if (float(predicted_change) >= Notify_Config['CRYPTOCURRENCY_PRICE_ABOVE'] or float(predicted_change)
+                    <= self.NOTIFY_CONFIG['CRYPTOCURRENCY_PRICE_BELOW']):
+                notify.push_notification(predicted_change, sentiment, sentiment_config.NAME)
+        if Notify_Config["NOTIFY_CRYPTOCURRENCY_EMAIL"] is True:
+            if (float(predicted_change) >= self.NOTIFY_CONFIG['CRYPTOCURRENCY_PRICE_ABOVE'] or float(predicted_change)
+                    <= Notify_Config['CRYPTOCURRENCY_PRICE_BELOW']):
+                notify.send_email(predicted_change, sentiment, sentiment_config.NAME, Notify_Config["EMAIL"])
 
-        print('Pass number : ' + str(self.num_of_passes))
+    def get_current_price(self):
+        timeout = 1
+        str_error = "No Price Yet"
+        while str_error:
+            try:
+                price_info = collect_prices.get_price_info(sentiment_config.EXCHANGE)
+                j_info = json.loads(price_info)
+                str_error = None
+            except Exception as str_error:
+                print(str_error)
+                time.sleep(timeout)
+                timeout += 1
+        print("Price got")
+        return j_info
+
+    def run(self):
 
         # cryptocurrency
         cryptocurrencyTweets = collect_tweets.collect_tweets(sentiment_config.NAME)
@@ -633,37 +643,13 @@ class WorkerThread(QThread):
         self.emit(SIGNAL("update_current_sentiment"), average_compound)
 
         if self.num_of_passes >= sentiment_config.NUMBER_OF_MINUTES:
-            #Mutex
-            while price_retrieved is not True:
-                print("Waiting")
-                continue
-            price_retrieved = False
+            j_info = self.get_current_price()
             self.num_of_passes = 0
             self.emit(SIGNAL("analyse_data"), "Features/"+sentiment_config.FEATURE_FILE, sentiment_config.NAME,
-                      self.formatted_cryptocurrency_tweets)
+                      self.formatted_cryptocurrency_tweets, j_info)
 
-class PriceThread(QThread):
-    def __init__(self, parent=None):
-        super(PriceThread, self).__init__(parent)
-
-    def run(self):
-        global price_retrieved
-        #Mutex
-        price_retrieved = False
-        global j_info
-        timeout = 1
-        str_error = "No Price Yet"
-        while str_error:
-            try:
-                price_info = collect_prices.get_price_info(sentiment_config.EXCHANGE)
-                j_info = json.loads(price_info)
-                str_error = None
-                price_retrieved = True
-            except Exception as str_error:
-                print(str_error)
-                time.sleep(timeout)
-                timeout += 1
-        print("Price got")
+        self.num_of_passes += 1
+        print('Pass number : ' + str(self.num_of_passes))
 
 if __name__ == '__main__':
     minute = 60000
