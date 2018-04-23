@@ -1,4 +1,3 @@
-#!/usr/bin/env python -W ignore::DeprecationWarning
 '''
 Author: Tomas Phelan
 License Employed: GNU General Public License v3.0
@@ -314,7 +313,7 @@ class SentimentTraderWindow(QTabWidget):
                     accuracy = ((abs(row["Actual Price"] - row["Average Prediction"]) / row["Average Prediction"]) * 100)
                 else: # Exact, so green
                     self.cryptocurrency_table_predictions.item(rowPosition, 7).setBackground(Qt.green)
-                    self.amountCorrect += 1
+                    accuracy = 0
 
                 bufferThreshold = sentiment_config.THRESHOLD_ACCURACY * 1.5
 
@@ -325,8 +324,7 @@ class SentimentTraderWindow(QTabWidget):
                     self.cryptocurrency_table_predictions.item(rowPosition, 7).setBackground(Qt.yellow)
                 else:
                     self.cryptocurrency_table_predictions.item(rowPosition, 7).setBackground(Qt.red)
-
-                self.update_accuracy(self.cryptocurrency_table_predictions.rowCount(), self.amountCorrect)
+            self.update_accuracy(self.cryptocurrency_table_predictions.rowCount(), self.amountCorrect)
 
     def update_prediction_table(self, time_stamp, linear_prediction, multi_linear_prediction,
                                 tree_prediction, forest_prediction, average_prediction, actual_price):
@@ -369,7 +367,6 @@ class SentimentTraderWindow(QTabWidget):
             self.cryptocurrency_table_predictions.item(rowPosition, 7).setBackground(Qt.yellow)
         else:
             self.cryptocurrency_table_predictions.item(rowPosition, 7).setBackground(Qt.red)
-
         self.update_accuracy(self.cryptocurrency_table_predictions.rowCount(), self.amountCorrect)
 
 
@@ -616,12 +613,14 @@ class WorkerThread(QThread):
         cryptocurrencyTweets = collect_tweets.collect_tweets(sentiment_config.NAME)
         cryptocurrencyTweets = process_tweets.process_tweets_from_main(cryptocurrencyTweets)
 
+        #remove duplicates
+        cryptocurrencyTweets = {tweet['formatted_text']:tweet for tweet in cryptocurrencyTweets}.values()
+
         tweets_for_table = [x for x in cryptocurrencyTweets if x not in self.formatted_cryptocurrency_tweets]
         self.formatted_cryptocurrency_tweets.extend(cryptocurrencyTweets)
 
         # remove duplicated tweets
-        self.formatted_cryptocurrency_tweets = [i for n, i in enumerate(self.formatted_cryptocurrency_tweets)
-                                                if i not in self.formatted_cryptocurrency_tweets[n + 1:]]
+        self.formatted_cryptocurrency_tweets = {tweet['formatted_text']:tweet for tweet in self.formatted_cryptocurrency_tweets}.values()
 
         #will clear the table every specified minutes
         refresh = False
@@ -635,10 +634,13 @@ class WorkerThread(QThread):
         self.emit(SIGNAL("update_current_sentiment"), average_compound)
 
         if self.num_of_passes >= sentiment_config.NUMBER_OF_MINUTES:
-            j_info = self.get_current_price()
+            j_info = None
+            if sentiment_config.TYPE is "CRYPTO":
+                j_info = self.get_current_price()
             self.num_of_passes = 0
             self.emit(SIGNAL("analyse_data"), "Features/"+sentiment_config.FEATURE_FILE, sentiment_config.NAME,
                       self.formatted_cryptocurrency_tweets, j_info)
+            self.formatted_cryptocurrency_tweets = []
 
 
 
