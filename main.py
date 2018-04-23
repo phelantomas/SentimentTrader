@@ -86,17 +86,17 @@ class SentimentTraderWindow(QTabWidget):
             self.cryptocurrency_table_negative_tweets.horizontalHeader().setResizeMode(1, QHeaderView.Stretch)
         else:
             #Positive
-            self.cryptocurrency_table_positive_tweets.setColumnWidth(0, 160)
+            self.cryptocurrency_table_positive_tweets.setColumnWidth(0, 140)
             self.cryptocurrency_table_positive_tweets.setColumnWidth(1, 955)
-            self.cryptocurrency_table_positive_tweets.setColumnWidth(2, 80)
+            self.cryptocurrency_table_positive_tweets.setColumnWidth(2, 60)
             self.cryptocurrency_table_positive_tweets.setMinimumWidth(1195)
 
             self.cryptocurrency_table_positive_tweets.setHorizontalHeaderLabels(positive_header)
 
             #Negative
-            self.cryptocurrency_table_negative_tweets.setColumnWidth(0, 160)
+            self.cryptocurrency_table_negative_tweets.setColumnWidth(0, 140)
             self.cryptocurrency_table_negative_tweets.setColumnWidth(1, 955)
-            self.cryptocurrency_table_negative_tweets.setColumnWidth(2, 80)
+            self.cryptocurrency_table_negative_tweets.setColumnWidth(2, 60)
             self.cryptocurrency_table_negative_tweets.setMinimumWidth(1195)
 
             self.cryptocurrency_table_negative_tweets.setHorizontalHeaderLabels(negative_header)
@@ -175,8 +175,10 @@ class SentimentTraderWindow(QTabWidget):
         logo = QPixmap(self.logo_path)
         label_image.setPixmap(logo)
         layout.addWidget(label_image)
-
-        disclaimer_text = "**DISCLAIMER! Trade " + sentiment_config.NAME + " at your own risk. There is no promise or warranty."
+        if sentiment_config.TYPE is "STOCK":
+            disclaimer_text = "**DISCLAIMER! Trade " + sentiment_config.NAME + " stocks at your own risk. There is no promise or warranty."
+        else:
+            disclaimer_text = "**DISCLAIMER! Trade " + sentiment_config.NAME + " at your own risk. There is no promise or warranty."
         disclaimer_label = QLabel(disclaimer_text)
 
         instructions_text = "Application may take a few hours before building up adequet training set of an unseen " + sentiment_config.TYPE
