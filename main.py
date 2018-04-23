@@ -372,7 +372,7 @@ class SentimentTraderWindow(QTabWidget):
 
     def init_plot(self):
         ax = self.cryptocurrencyFigure.add_subplot(111)
-        ax.set_title(sentiment_config.NAME + ' Price Previous ' + str(sentiment_config.NUMBER_OF_MINUTES) + " minutes")
+        ax.set_title(sentiment_config.NAME + ' Price Previous ' + str(sentiment_config.NUMBER_OF_MINUTES) + " Minutes")
         ax.set_ylabel('Price ($)')
         ax.set_xlabel('Time (h)')
         ax.grid()
@@ -440,7 +440,7 @@ class SentimentTraderWindow(QTabWidget):
         ax.remove()
         ax = self.cryptocurrencyFigure.add_subplot(111)
         ax.set_facecolor(self.light_green)
-        ax.set_title(sentiment_config.NAME + ' Price Previous ' + str(sentiment_config.NUMBER_OF_MINUTES) + " minutes")
+        ax.set_title(sentiment_config.NAME + ' Price Previous ' + str(sentiment_config.NUMBER_OF_MINUTES) + " Minutes")
         ax.set_ylabel('Price ($)')
         ax.set_xlabel('Time (h)')
         ax.grid()
@@ -617,7 +617,7 @@ class WorkerThread(QThread):
         cryptocurrencyTweets = {tweet['formatted_text']:tweet for tweet in cryptocurrencyTweets}.values()
 
         tweets_for_table = [x for x in cryptocurrencyTweets if x not in self.formatted_cryptocurrency_tweets]
-        self.formatted_cryptocurrency_tweets.extend(cryptocurrencyTweets)
+        self.formatted_cryptocurrency_tweets.extend(tweets_for_table)
 
         # remove duplicated tweets
         self.formatted_cryptocurrency_tweets = {tweet['formatted_text']:tweet for tweet in self.formatted_cryptocurrency_tweets}.values()
@@ -626,12 +626,15 @@ class WorkerThread(QThread):
         refresh = False
         if self.num_of_passes >= sentiment_config.NUMBER_OF_MINUTES:
             refresh = True
+            average_compound = float(sum(d['sentiment']['compound'] for d in tweets_for_table)) / len(
+                tweets_for_table)
+            self.emit(SIGNAL("update_current_sentiment"), average_compound)
+        else:
+            average_compound = float(
+                sum(d['sentiment']['compound'] for d in self.formatted_cryptocurrency_tweets)) / len(
+                self.formatted_cryptocurrency_tweets)
+            self.emit(SIGNAL("update_current_sentiment"), average_compound)
         self.emit(SIGNAL("update_tweets_table"), tweets_for_table, refresh)
-
-        # average compound sentiment
-        average_compound = float(sum(d['sentiment']['compound'] for d in self.formatted_cryptocurrency_tweets)) / len(
-            self.formatted_cryptocurrency_tweets)
-        self.emit(SIGNAL("update_current_sentiment"), average_compound)
 
         if self.num_of_passes >= sentiment_config.NUMBER_OF_MINUTES:
             j_info = None
