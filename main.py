@@ -593,16 +593,6 @@ class WorkerThread(QThread):
         self.num_of_passes = 0
         self.formatted_cryptocurrency_tweets = []
 
-    def notify_user(self, predicted_change, sentiment, Notify_Config):
-        if Notify_Config["NOTIFY_CRYPTOCURRENCY_PUSH"] is True:
-            if (float(predicted_change) >= Notify_Config['CRYPTOCURRENCY_PRICE_ABOVE'] or float(predicted_change)
-                    <= self.NOTIFY_CONFIG['CRYPTOCURRENCY_PRICE_BELOW']):
-                notify.push_notification(predicted_change, sentiment, sentiment_config.NAME)
-        if Notify_Config["NOTIFY_CRYPTOCURRENCY_EMAIL"] is True:
-            if (float(predicted_change) >= self.NOTIFY_CONFIG['CRYPTOCURRENCY_PRICE_ABOVE'] or float(predicted_change)
-                    <= Notify_Config['CRYPTOCURRENCY_PRICE_BELOW']):
-                notify.send_email(predicted_change, sentiment, sentiment_config.NAME, Notify_Config["EMAIL"])
-
     def get_current_price(self):
         timeout = 1
         str_error = "No Price Yet"
@@ -619,6 +609,8 @@ class WorkerThread(QThread):
         return j_info
 
     def run(self):
+        self.num_of_passes += 1
+        print('Pass number : ' + str(self.num_of_passes))
 
         # cryptocurrency
         cryptocurrencyTweets = collect_tweets.collect_tweets(sentiment_config.NAME)
@@ -648,8 +640,7 @@ class WorkerThread(QThread):
             self.emit(SIGNAL("analyse_data"), "Features/"+sentiment_config.FEATURE_FILE, sentiment_config.NAME,
                       self.formatted_cryptocurrency_tweets, j_info)
 
-        self.num_of_passes += 1
-        print('Pass number : ' + str(self.num_of_passes))
+
 
 if __name__ == '__main__':
     minute = 60000
