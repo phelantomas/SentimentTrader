@@ -107,7 +107,7 @@ class SentimentTraderWindow(QTabWidget):
         # Tables for past predictions
         self.cryptocurrency_table_predictions = QTableWidget()
         header = ['TimeStamp', 'Linear Prediction', 'Multi Linear Prediction','Tree Prediction',
-                  'Forest Prediction','Average Prediction', 'Actual Price', 'Threshold ' + str(sentiment_config.THRESHOLD_ACCURACY) + "%"]
+                  'Forest Prediction','Average Prediction', 'Actual Price', 'Threshold ' + str(10 * sentiment_config.THRESHOLD_ACCURACY) + "%"]
 
         self.cryptocurrency_table_predictions.setColumnCount(8)
 
@@ -358,7 +358,7 @@ class SentimentTraderWindow(QTabWidget):
             accuracy = ((abs(price - predicted) / predicted) * 100.0)
         else:  # Exact, so green
             self.cryptocurrency_table_predictions.item(rowPosition, 7).setBackground(Qt.green)
-            self.amountCorrect += 1
+            accuracy = 0
 
         bufferThreshold = sentiment_config.THRESHOLD_ACCURACY * 1.5
 
@@ -624,8 +624,11 @@ class WorkerThread(QThread):
         refresh = False
         if self.num_of_passes >= sentiment_config.NUMBER_OF_MINUTES:
             refresh = True
-            average_compound = float(sum(d['sentiment']['compound'] for d in tweets_for_table)) / len(
-                tweets_for_table)
+            if len(tweets_for_table) is 0:
+                average_compound = 0
+            else:
+                average_compound = float(sum(d['sentiment']['compound'] for d in tweets_for_table)) / len(
+                    tweets_for_table)
             self.emit(SIGNAL("update_current_sentiment"), average_compound)
         else:
             average_compound = float(
