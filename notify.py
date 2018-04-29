@@ -6,7 +6,7 @@ import sys
 import os
 
 def send_email(predicted_change, sentiment, coin, toaddr):
-    fromaddr = "cryptocurrency.sentiment@gmail.com"
+    fromaddr = "email_here"
     msg = MIMEMultipart()
     msg['From'] = fromaddr
     msg['To'] = toaddr
@@ -18,7 +18,7 @@ def send_email(predicted_change, sentiment, coin, toaddr):
     server = smtplib.SMTP("smtp.gmail.com", "587")
     server.starttls()
     server.ehlo()
-    server.login(fromaddr, "Analysis1234")
+    server.login(fromaddr, "password_here")
     text = msg.as_string()
     server.sendmail(fromaddr, toaddr, text)
     server.quit()
